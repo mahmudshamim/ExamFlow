@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Debugger</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .card {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #3a3a3a;
+        }
+        h1 {
+            color: #60a5fa;
+            margin-bottom: 24px;
+        }
+        h2 {
+            color: #a78bfa;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #3a3a3a;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .status.valid {
+            background: #10b981;
+            color: white;
+        }
+        .status.invalid {
+            background: #ef4444;
+            color: white;
+        }
+        .status.warning {
+            background: #f59e0b;
+            color: white;
+        }
+        button {
+            background: #60a5fa;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #3b82f6;
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button.danger:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 ExamFlow Token Debugger</h1>
+    
+    <div class="card">
+        <h2>Token Status</h2>
+        <div id="tokenStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>User Information</h2>
+        <div id="userInfo"></div>
+    </div>
+
+    <div class="card">
+        <h2>Token Details</h2>
+        <div id="tokenDetails"></div>
+    </div>
+
+    <div class="card">
+        <h2>Actions</h2>
+        <button onclick="clearToken()">Clear Token & User Data</button>
+        <button onclick="window.location.href='/login'">Go to Login</button>
+        <button onclick="testAPI()">Test API Connection</button>
+    </div>
+
+    <script>
+        function decodeJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            // Token Status
+            const tokenStatusDiv = document.getElementById('tokenStatus');
+            if (!token) {
+                tokenStatusDiv.innerHTML = '<span class="status invalid">❌ No Token Found</span><p>You need to login first.</p>';
+            } else {
+                const decoded = decodeJWT(token);
+                if (!decoded) {
+                    tokenStatusDiv.innerHTML = '<span class="status invalid">❌ Invalid Token Format</span><p>Token is corrupted or malformed.</p>';
+                } else {
+                    const exp = decoded.exp * 1000; // Convert to milliseconds
+                    const now = Date.now();
+                    const isExpired = exp < now;
+                    
+                    if (isExpired) {
+                        const expiredAgo = Math.floor((now - exp) / 1000 / 60);
+                        tokenStatusDiv.innerHTML = `<span class="status invalid">❌ Token Expired</span><p>Expired ${expiredAgo} minutes ago. Please login again.</p>`;
+                    } else {
+                        const expiresIn = Math.floor((exp - now) / 1000 / 60);
+                        tokenStatusDiv.innerHTML = `<span class="status valid">✅ Token Valid</span><p>Expires in ${expiresIn} minutes.</p>`;
+                    }
+                }
+            }
+
+            // User Info
+            const userInfoDiv = document.getElementById('userInfo');
+            if (!user) {
+                userInfoDiv.innerHTML = '<p>No user data found in localStorage.</p>';
+            } else {
+                try {
+                    const userData = JSON.parse(user);
+                    userInfoDiv.innerHTML = `<pre>${JSON.stringify(userData, null, 2)}</pre>`;
+                } catch (e) {
+                    userInfoDiv.innerHTML = '<span class="status invalid">❌ Invalid User Data</span>';
+                }
+            }
+
+            // Token Details
+            const tokenDetailsDiv = document.getElementById('tokenDetails');
+            if (token) {
+                const decoded = decodeJWT(token);
+                if (decoded) {
+                    tokenDetailsDiv.innerHTML = `<pre>${JSON.stringify(decoded, null, 2)}</pre>`;
+                } else {
+                    tokenDetailsDiv.innerHTML = '<p>Unable to decode token.</p>';
+                }
+            } else {
+                tokenDetailsDiv.innerHTML = '<p>No token to display.</p>';
+            }
+        }
+
+        function clearToken() {
+            if (confirm('Are you sure you want to clear all authentication data?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                alert('✅ Token and user data cleared! Please login again.');
+                location.reload();
+            }
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('❌ No token found. Please login first.');
+                return;
+            }
+
+            const apiUrl = 'http://localhost:5000/api';
+            
+            try {
+                const response = await fetch(`${apiUrl}/analytics/global`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ API Connection Successful!\n\n' + JSON.stringify(data, null, 2));
+                } else {
+                    const error = await response.text();
+                    alert(`❌ API Error (${response.status}):\n\n${error}`);
+                }
+            } catch (error) {
+                alert(`❌ Connection Failed:\n\n${error.message}`);
+            }
+        }
+
+        // Run on load
+        checkToken();
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "name": "examflow-root",
+    "version": "1.0.0",
+    "description": "ExamFlow Monorepo Root",
+    "scripts": {
+        "client-dev": "cd client && npm run dev",
+        "server-dev": "cd server && npm run dev",
+        "dev": "npm run server-dev & npm run client-dev"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
