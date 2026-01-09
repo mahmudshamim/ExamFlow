@@ -40,6 +40,11 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/upload', uploadRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export for Vercel / Start for Local
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
