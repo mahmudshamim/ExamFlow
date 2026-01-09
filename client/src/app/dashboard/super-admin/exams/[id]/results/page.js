@@ -150,7 +150,6 @@ export default function ExamResultsPage() {
             if (result.isConfirmed) {
                 try {
                     const token = localStorage.getItem('token');
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
                     Swal.fire({
                         title: 'Updating Grade...',
@@ -158,7 +157,7 @@ export default function ExamResultsPage() {
                         allowOutsideClick: false
                     });
 
-                    await axios.patch(`${apiUrl}/submissions/${submission._id}/grade`,
+                    await axios.patch(`${API_URL}/submissions/${submission._id}/grade`,
                         { gradedAnswers: result.value },
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
@@ -232,7 +231,6 @@ export default function ExamResultsPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
             Swal.fire({
                 title: 'Sending Emails...',
@@ -242,7 +240,7 @@ export default function ExamResultsPage() {
                 customClass: { popup: 'rounded-[32px] p-10' }
             });
 
-            const res = await axios.post(`${apiUrl}/exams/${id}/send-results-bulk`, {}, {
+            const res = await axios.post(`${API_URL}/exams/${id}/send-results-bulk`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -354,8 +352,7 @@ export default function ExamResultsPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            await axios.delete(`${apiUrl}/submissions/${submissionId}`, {
+            await axios.delete(`${API_URL}/submissions/${submissionId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

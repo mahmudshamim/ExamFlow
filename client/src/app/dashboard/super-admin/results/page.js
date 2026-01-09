@@ -121,9 +121,7 @@ export default function AllResultsPage() {
     const handleToggleEmail = async (examId, currentStatus) => {
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-            await axios.patch(`${apiUrl}/exams/${examId}/settings`, {
+            await axios.patch(`${API_URL}/exams/${examId}/settings`, {
                 settings: { automatedEmail: !currentStatus }
             }, {
                 headers: { Authorization: `Bearer ${token}` }
