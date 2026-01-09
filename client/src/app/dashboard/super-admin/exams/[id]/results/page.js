@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
+import API_URL from '@/config';
 import { ChevronLeft, Download, Search, CheckCircle, XCircle, Trash2, Eye, FileText, Mail } from 'lucide-react';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
@@ -19,13 +20,12 @@ export default function ExamResultsPage() {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
                 const headers = { Authorization: `Bearer ${token}` };
 
                 // Fetch Exam Details & Submissions
                 const [examRes, subsRes] = await Promise.all([
-                    axios.get(`${apiUrl}/exams/${id}`, { headers }),
-                    axios.get(`${apiUrl}/submissions/exam/${id}`, { headers })
+                    axios.get(`${API_URL}/exams/${id}`, { headers }),
+                    axios.get(`${API_URL}/submissions/exam/${id}`, { headers })
                 ]);
 
                 setExam(examRes.data.exam);

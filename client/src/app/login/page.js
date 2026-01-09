@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import API_URL from '@/config';
 import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
@@ -17,9 +18,7 @@ export default function LoginPage() {
         setError('');
 
         try {
-            // Adjust API URL as needed (e.g. process.env.NEXT_PUBLIC_API_URL or localhost)
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const res = await axios.post(`${apiUrl}/auth/login`, formData);
+            const res = await axios.post(`${API_URL}/auth/login`, formData);
 
             const { token, user } = res.data;
             localStorage.setItem('token', token);

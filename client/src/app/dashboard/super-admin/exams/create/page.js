@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import API_URL from '@/config';
 import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import DatePicker from "react-datepicker";
@@ -123,8 +124,7 @@ export default function CreateExamPage() {
         formData.append('file', file);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const res = await axios.post(`${apiUrl}/upload`, formData, {
+            const res = await axios.post(`${API_URL}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -217,19 +217,16 @@ export default function CreateExamPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const user = JSON.parse(localStorage.getItem('user'));
 
             // Clean up questions before sending (remove temp IDs)
             const cleanQuestions = questions.map(({ id, ...rest }) => rest);
 
             const payload = {
                 ...examData,
-                hrId: user._id,
                 questions: cleanQuestions
             };
 
-            const response = await axios.post(`${apiUrl}/exams`, payload, {
+            const res = await axios.post(`${API_URL}/exams`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

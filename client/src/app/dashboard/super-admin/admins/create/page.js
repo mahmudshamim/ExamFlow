@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import axios from 'axios';
+import API_URL from '@/config';
 import { UserPlus, Mail, Lock, User, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function CreateAdminPage() {
@@ -13,10 +14,9 @@ export default function CreateAdminPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
             await axios.post(
-                `${apiUrl}/auth/create-admin`,
+                `${API_URL}/auth/create-admin`,
                 formData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );

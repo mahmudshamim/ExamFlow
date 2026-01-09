@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter, useParams } from 'next/navigation';
+import API_URL from '@/config';
 import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import DatePicker from "react-datepicker";
@@ -45,9 +46,8 @@ export default function EditExamPage() {
         const fetchExamData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-                const res = await axios.get(`${apiUrl}/exams/${examId}`, {
+                const res = await axios.get(`${API_URL}/exams/${examId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -173,8 +173,7 @@ export default function EditExamPage() {
         formData.append('file', file);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const res = await axios.post(`${apiUrl}/upload`, formData, {
+            const res = await axios.post(`${API_URL}/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
@@ -230,7 +229,6 @@ export default function EditExamPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
             // Clean up questions before sending (remove temp IDs)
             const cleanQuestions = questions.map(({ id, ...rest }) => rest);
@@ -240,7 +238,7 @@ export default function EditExamPage() {
                 questions: cleanQuestions
             };
 
-            await axios.put(`${apiUrl}/exams/${examId}`, payload, {
+            await axios.put(`${API_URL}/exams/${examId}`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

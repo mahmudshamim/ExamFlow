@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_URL from '@/config';
 import { Search, FileText, ChevronRight, Edit, Trash2, Link as LinkIcon, Copy, Check, MoreVertical, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
@@ -18,8 +19,7 @@ export default function AllResultsPage() {
     const fetchExams = async () => {
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const res = await axios.get(`${apiUrl}/exams`, {
+            const res = await axios.get(`${API_URL}/exams`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setExams(res.data);
@@ -71,9 +71,8 @@ export default function AllResultsPage() {
 
         try {
             const token = localStorage.getItem('token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-            await axios.delete(`${apiUrl}/exams/${examId}`, {
+            await axios.delete(`${API_URL}/exams/${examId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

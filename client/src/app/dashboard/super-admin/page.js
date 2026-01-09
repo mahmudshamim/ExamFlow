@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_URL from '@/config';
 import { Users, FileText, CheckCircle, XCircle, TrendingUp, Shield, Mail, Trash2, Calendar, Clock, ChevronRight, Search, Layout, LogOut, Copy } from 'lucide-react';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
@@ -31,12 +32,11 @@ export default function SuperAdminDashboard() {
                 return;
             }
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
             const headers = getAuthHeaders();
 
             const [statsRes, examsRes] = await Promise.all([
-                axios.get(`${apiUrl}/analytics/global`, { headers }),
-                axios.get(`${apiUrl}/exams`, { headers })
+                axios.get(`${API_URL}/analytics/global`, { headers }),
+                axios.get(`${API_URL}/exams`, { headers })
             ]);
 
             setStats(statsRes.data);
@@ -105,10 +105,9 @@ export default function SuperAdminDashboard() {
         }
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
             const headers = getAuthHeaders();
 
-            await axios.delete(`${apiUrl}/exams/${examId}`, { headers });
+            await axios.delete(`${API_URL}/exams/${examId}`, { headers });
 
             Swal.fire({
                 html: `

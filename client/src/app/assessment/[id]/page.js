@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Clock, ChevronLeft, ChevronRight, Send, AlertTriangle, ShieldCheck, Mail, Info } from "lucide-react";
+import Link from 'next/link';
+import API_URL from '@/config';
+import axios from 'axios';
+import { Clock, Send, AlertTriangle, ShieldCheck, Mail, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Swal from 'sweetalert2';
 
@@ -26,13 +29,13 @@ export default function AssessmentInterface() {
     useEffect(() => {
         const fetchAssessment = async () => {
             try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-                const res = await fetch(`${apiUrl}/exams/${id}`);
-                const data = await res.json();
-                setAssessment(data.exam);
-                setQuestions(data.questions);
-                setTimeLeft(data.exam.duration * 60);
-                setLoading(false);
+                const res = await axios.get(`${API_URL}/exams/${id}`);
+                if (res.data) {
+                    setAssessment(res.data.exam);
+                    setQuestions(res.data.questions);
+                    setTimeLeft(res.data.exam.duration * 60);
+                    setLoading(false);
+                }
             } catch (err) {
                 console.error(err);
                 setLoading(false);
@@ -171,16 +174,10 @@ export default function AssessmentInterface() {
                 }))
             };
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-            const response = await fetch(`${apiUrl}/submissions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(submissionData)
-            });
+            const res = await axios.post(`${API_URL}/submissions`, submissionData);
 
-            if (response.ok) {
-                const result = await response.json();
-                setScore(result);
+            if (res.data) {
+                setScore(res.data);
                 setSubmitted(true);
                 setShowConfirm(false);
                 Swal.fire({
@@ -191,20 +188,12 @@ export default function AssessmentInterface() {
                     showConfirmButton: false,
                     confirmButtonColor: '#1565C0',
                 });
-            } else {
-                const err = await response.json();
-                Swal.fire({
-                    title: 'Submission Failed',
-                    text: err.error || 'Something went wrong',
-                    icon: 'error',
-                    confirmButtonColor: '#1565C0',
-                });
             }
         } catch (err) {
             console.error(err);
             Swal.fire({
-                title: 'Error',
-                text: 'Could not submit assessment. Please check your connection.',
+                title: 'Submission Failed',
+                text: err.response?.data?.error || 'Something went wrong',
                 icon: 'error',
                 confirmButtonColor: '#1565C0',
             });
