@@ -47,7 +47,7 @@ const connectDB = async () => {
 
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
-      bufferCommands: false, // Disable buffering for faster failure/feedback
+      bufferCommands: true, // Enable buffering to handle cold starts
     });
 
     cachedConnection = conn;
