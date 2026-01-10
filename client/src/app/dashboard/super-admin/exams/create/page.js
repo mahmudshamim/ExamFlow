@@ -230,7 +230,7 @@ export default function CreateExamPage() {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            const examId = response.data.exam._id;
+            const examId = res.data.exam._id;
             const liveLink = `${window.location.origin}/assessment/${examId}`;
 
             const swalResult = await Swal.fire({
