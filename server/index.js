@@ -15,21 +15,25 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
-console.log('Attempting to connect to MongoDB...');
-if (!process.env.MONGODB_URI) {
-  console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
-}
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
+      return; // Stop here, don't crash
+    }
 
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 5000,
-})
-  .then(() => {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log('✅ MongoDB connected successfully to Atlas');
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('❌ MongoDB connection error:');
     console.error('Message:', err.message);
-  });
+  }
+};
+
+// Connect immediately (but async safe)
+connectDB();
 
 
 // Basic Health Check Route
