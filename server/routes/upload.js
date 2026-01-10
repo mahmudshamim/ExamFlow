@@ -4,10 +4,19 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+const os = require('os');
+
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Use /tmp in production (Vercel) because other directories are creating read-only errors
+const isProduction = process.env.NODE_ENV === 'production';
+const uploadDir = isProduction ? os.tmpdir() : path.join(__dirname, '../uploads');
+
+try {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+} catch (err) {
+    console.error('Warning: Could not create upload directory.', err);
 }
 
 // Configure Storage
