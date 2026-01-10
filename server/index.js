@@ -30,26 +30,37 @@ if (fs.existsSync(uploadsDir)) {
   app.use('/uploads', express.static(uploadsDir));
 }
 
-// MongoDB Connection
+// MongoDB Connection with Caching
+let cachedConnection = null;
+
 const connectDB = async () => {
+  if (cachedConnection) {
+    console.log('✅ Using cached MongoDB connection');
+    return cachedConnection;
+  }
+
   try {
     if (!process.env.MONGODB_URI) {
       console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
-      return; // Stop here, don't crash
+      return;
     }
 
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
+      bufferCommands: false, // Disable buffering for faster failure/feedback
     });
-    console.log('✅ MongoDB connected successfully to Atlas');
+
+    cachedConnection = conn;
+    console.log('✅ New MongoDB connection established');
+    return conn;
   } catch (err) {
-    console.error('❌ MongoDB connection error:');
-    console.error('Message:', err.message);
+    console.error('❌ MongoDB connection error:', err.message);
+    throw err;
   }
 };
 
-// Connect immediately (but async safe)
-connectDB();
+// Connect immediately
+connectDB().catch(console.error);
 
 
 // Basic Health Check Route
