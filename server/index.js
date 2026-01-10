@@ -16,6 +16,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 console.log('Attempting to connect to MongoDB...');
+if (!process.env.MONGODB_URI) {
+  console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
+}
+
 mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,
 })
@@ -23,10 +27,19 @@ mongoose.connect(process.env.MONGODB_URI, {
     console.log('✅ MongoDB connected successfully to Atlas');
   })
   .catch(err => {
-    console.error('❌ MongoDB connection error details:');
+    console.error('❌ MongoDB connection error:');
     console.error('Message:', err.message);
   });
 
+
+// Basic Health Check Route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'Server is running',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    env: process.env.NODE_ENV
+  });
+});
 
 // Import Routes
 const authRoutes = require('./routes/auth');
@@ -39,6 +52,16 @@ app.use('/api/exams', examRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/upload', uploadRoutes);
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled Error:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack
+  });
+});
 
 // Export for Vercel / Start for Local
 if (process.env.NODE_ENV !== 'production') {
