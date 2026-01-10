@@ -5,12 +5,15 @@ const Question = require('../models/question');
 const Submission = require('../models/submission');
 const { sendResultEmail } = require('../utils/email');
 
+const { auth } = require('../middleware/auth');
+
 // Middleware would be needed here to verify teacher/admin role
 
 // Create Exam (HR)
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
     try {
-        const { hrId, title, description, coverImage, startTime, endTime, duration, questions, settings } = req.body;
+        const { title, description, coverImage, startTime, endTime, duration, questions, settings } = req.body;
+        const hrId = req.user._id;
 
         // 1. Create Exam
         const exam = new Exam({
