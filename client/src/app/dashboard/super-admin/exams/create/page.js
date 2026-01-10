@@ -292,7 +292,9 @@ export default function CreateExamPage() {
                 router.push('/dashboard/super-admin');
             }
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to create exam');
+            console.error('Exam Creation Error:', err);
+            const errMsg = err.response?.data?.error || err.message || 'Failed to create exam';
+            setError(errMsg);
         } finally {
             setLoading(false);
         }
