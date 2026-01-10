@@ -42,7 +42,7 @@ router.post('/', auth, async (req, res) => {
 
         res.status(201).json({ exam, questions: questionDocs });
     } catch (err) {
-        console.error(err);
+        console.error('SERVER ERROR: Create Exam Failed:', err);
         res.status(500).json({ error: err.message });
     }
 });
