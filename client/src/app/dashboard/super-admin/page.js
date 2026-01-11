@@ -278,7 +278,7 @@ export default function SuperAdminDashboard() {
                             ) : (
                                 exams.slice(0, 5).map((exam) => (
                                     <tr key={exam._id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{exam.title}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-900 max-w-xs truncate" title={exam.title}>{exam.title}</td>
                                         <td className="px-6 py-4 text-gray-500">{exam.hrId?.name || 'Unknown'}</td>
                                         <td className="px-6 py-4 text-gray-500">{exam.duration} mins</td>
                                         <td className="px-6 py-4">
