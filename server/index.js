@@ -60,7 +60,7 @@ const connectDB = async () => {
 };
 
 // Connect immediately
-connectDB().catch(console.error);
+// Connect logic is handled in startup block below
 
 
 // Basic Health Check Route
@@ -95,10 +95,20 @@ app.use((err, req, res, next) => {
 });
 
 // Export for Vercel / Start for Local
+// Export for Vercel / Start for Local
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  }).catch((err) => {
+    console.error('❌ Failed to connect to MongoDB. Server shutting down...');
+    console.error(err);
+    process.exit(1);
   });
+} else {
+  // For Vercel (Serverless), initiate connection but don't block export
+  connectDB().catch(console.error);
 }
 
 module.exports = app;
