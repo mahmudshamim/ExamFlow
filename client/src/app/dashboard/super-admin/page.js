@@ -183,8 +183,48 @@ export default function SuperAdminDashboard() {
 
     if (loading) {
         return (
-            <div className="h-[50vh] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="space-y-8 animate-in fade-in duration-300 pb-10">
+                {/* Header Skeleton */}
+                <div className="flex justify-between items-center">
+                    <div>
+                        <div className="h-9 w-64 bg-gray-200 rounded-lg animate-pulse"></div>
+                        <div className="h-5 w-96 bg-gray-100 rounded mt-2 animate-pulse"></div>
+                    </div>
+                    <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse"></div>
+                </div>
+
+                {/* Stats Grid Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                                <div className="flex-1">
+                                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                    <div className="h-7 w-16 bg-gray-300 rounded animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Table Skeleton */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                        <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex items-center gap-4">
+                                <div className="h-4 flex-1 bg-gray-100 rounded animate-pulse"></div>
+                                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse"></div>
+                                <div className="h-4 w-20 bg-gray-100 rounded animate-pulse"></div>
+                                <div className="h-6 w-16 bg-gray-100 rounded-full animate-pulse"></div>
+                                <div className="h-8 w-32 bg-gray-100 rounded-lg animate-pulse"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }
