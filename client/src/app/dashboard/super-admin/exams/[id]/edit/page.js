@@ -163,34 +163,74 @@ export default function EditExamPage() {
         }
     };
 
-    // --- File Upload Handler (Base64) ---
+    // --- Image Compression Helper ---
+    const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate new dimensions (max 1200px width/height)
+                    const maxDimension = 1200;
+                    if (width > height && width > maxDimension) {
+                        height = (height / width) * maxDimension;
+                        width = maxDimension;
+                    } else if (height > maxDimension) {
+                        width = (width / height) * maxDimension;
+                        height = maxDimension;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Start with quality 0.8 and reduce if needed
+                    let quality = 0.8;
+                    let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+
+                    // Keep reducing quality until size is under 100KB
+                    while (compressedDataUrl.length > 100 * 1024 && quality > 0.1) {
+                        quality -= 0.1;
+                        compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+
+                    resolve(compressedDataUrl);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // --- File Upload Handler (Base64 with Compression) ---
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Check file size (max 2MB for base64)
-        if (file.size > 2 * 1024 * 1024) {
-            setError('Image size must be less than 2MB');
+        // Check if it's an image
+        if (!file.type.startsWith('image/')) {
+            setError('Please upload an image file');
             return;
         }
 
         setUploading(true);
+        setError('');
 
         try {
-            // Convert to base64
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setExamData({ ...examData, coverImage: reader.result });
-                setUploading(false);
-            };
-            reader.onerror = () => {
-                setError('Failed to read image file');
-                setUploading(false);
-            };
-            reader.readAsDataURL(file);
+            const compressedImage = await compressImage(file);
+            setExamData({ ...examData, coverImage: compressedImage });
         } catch (err) {
             console.error(err);
-            setError('Failed to upload image');
+            setError('Failed to process image');
+        } finally {
             setUploading(false);
         }
     };
