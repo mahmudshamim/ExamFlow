@@ -95,7 +95,6 @@ app.use((err, req, res, next) => {
 });
 
 // Export for Vercel / Start for Local
-// Export for Vercel / Start for Local
 if (process.env.NODE_ENV !== 'production') {
   connectDB().then(() => {
     app.listen(PORT, () => {
@@ -106,9 +105,11 @@ if (process.env.NODE_ENV !== 'production') {
     console.error(err);
     process.exit(1);
   });
-} else {
-  // For Vercel (Serverless), initiate connection but don't block export
-  connectDB().catch(console.error);
 }
 
-module.exports = app;
+// For Vercel serverless, wrap app to ensure DB connection
+module.exports = async (req, res) => {
+  await connectDB();
+  return app(req, res);
+};
+
