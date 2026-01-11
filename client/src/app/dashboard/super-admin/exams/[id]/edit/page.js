@@ -163,26 +163,34 @@ export default function EditExamPage() {
         }
     };
 
-    // --- File Upload Handler ---
+    // --- File Upload Handler (Base64) ---
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Check file size (max 2MB for base64)
+        if (file.size > 2 * 1024 * 1024) {
+            setError('Image size must be less than 2MB');
+            return;
+        }
+
         setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
 
         try {
-            const res = await axios.post(`${API_URL}/upload`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            setExamData({ ...examData, coverImage: res.data.url });
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setExamData({ ...examData, coverImage: reader.result });
+                setUploading(false);
+            };
+            reader.onerror = () => {
+                setError('Failed to read image file');
+                setUploading(false);
+            };
+            reader.readAsDataURL(file);
         } catch (err) {
             console.error(err);
             setError('Failed to upload image');
-        } finally {
             setUploading(false);
         }
     };
