@@ -25,6 +25,7 @@ export default function AssessmentInterface() {
     const [submitting, setSubmitting] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
     const [warningShown, setWarningShown] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchAssessment = async () => {
@@ -37,7 +38,8 @@ export default function AssessmentInterface() {
                     setLoading(false);
                 }
             } catch (err) {
-                console.error(err);
+                console.error('Failed to fetch assessment:', err);
+                setError(err.response?.data?.error || 'Failed to load assessment. Please check the link and try again.');
                 setLoading(false);
             }
         };
@@ -206,6 +208,23 @@ export default function AssessmentInterface() {
         return (
             <div className="min-h-screen flex items-center justify-center font-bold text-slate-400">
                 LOADING ASSESSMENT...
+            </div>
+        );
+    }
+
+    if (error || !assessment) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                <div className="glass max-w-lg w-full p-10 rounded-[2.5rem] shadow-2xl text-center space-y-6">
+                    <div className="w-20 h-20 bg-red-100 rounded-3xl flex items-center justify-center mx-auto">
+                        <AlertTriangle className="text-red-600" size={40} />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-800">Assessment Not Found</h2>
+                    <p className="text-slate-600">
+                        {error || 'The assessment you are looking for does not exist or has been removed.'}
+                    </p>
+                    <p className="text-sm text-slate-400">Please check the link and try again.</p>
+                </div>
             </div>
         );
     }
