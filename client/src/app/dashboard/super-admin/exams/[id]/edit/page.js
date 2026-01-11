@@ -174,8 +174,8 @@ export default function EditExamPage() {
                     let width = img.width;
                     let height = img.height;
 
-                    // Calculate new dimensions (max 1200px width/height)
-                    const maxDimension = 1200;
+                    // Calculate new dimensions (max 800px width/height for better compression)
+                    const maxDimension = 800;
                     if (width > height && width > maxDimension) {
                         height = (height / width) * maxDimension;
                         width = maxDimension;
@@ -190,16 +190,17 @@ export default function EditExamPage() {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Start with quality 0.8 and reduce if needed
-                    let quality = 0.8;
+                    // Start with quality 0.7 and reduce if needed
+                    let quality = 0.7;
                     let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
 
-                    // Keep reducing quality until size is under 100KB
-                    while (compressedDataUrl.length > 100 * 1024 && quality > 0.1) {
-                        quality -= 0.1;
+                    // Keep reducing quality until size is under 50KB
+                    while (compressedDataUrl.length > 50 * 1024 && quality > 0.1) {
+                        quality -= 0.05;
                         compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
                     }
 
+                    console.log(`Image compressed to ${(compressedDataUrl.length / 1024).toFixed(2)}KB at quality ${quality.toFixed(2)}`);
                     resolve(compressedDataUrl);
                 };
                 img.onerror = reject;
