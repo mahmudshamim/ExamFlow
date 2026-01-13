@@ -48,7 +48,7 @@ export default function ExamResultsPage() {
 
     const handleViewDetails = (submission) => {
         const detailsHtml = questions.map((q, idx) => {
-            const candidateAnswer = submission.answers.find(a => a.questionId === q._id);
+            const candidateAnswer = submission.answers.find(a => a.questionId.toString() === q._id.toString());
             const marks = candidateAnswer?.marksObtained;
             const isGraded = candidateAnswer?.isGraded;
             const isCorrect = isGraded && marks > 0;
