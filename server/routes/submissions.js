@@ -86,7 +86,7 @@ router.post('/', async (req, res) => {
         // 5. Automated Email (Send immediately if toggle is ON)
         if (exam.settings.automatedEmail) {
             console.log(`Sending automated email for ${candidateEmail} (Status: ${finalStatus})`);
-            sendResultEmail(candidateEmail, candidateName, exam.title, submission.totalScore, totalPossibleMarks)
+            sendResultEmail(candidateEmail, candidateName, exam.title, submission.totalScore, totalPossibleMarks, questions, gradedAnswers)
                 .then(success => console.log(`Post-submission email result: ${success}`))
                 .catch(err => console.error(`Post-submission email crash:`, err));
         }
@@ -247,7 +247,7 @@ router.patch('/:id/grade', async (req, res) => {
             // Calculate total possible marks for the email
             const totalPossibleMarks = questions.reduce((sum, q) => sum + q.marks, 0);
 
-            sendResultEmail(submission.candidateEmail, submission.candidateName, exam.title, submission.totalScore, totalPossibleMarks)
+            sendResultEmail(submission.candidateEmail, submission.candidateName, exam.title, submission.totalScore, totalPossibleMarks, questions, submission.answers)
                 .then(success => console.log(`Post-grading email result: ${success}`))
                 .catch(err => console.error(`Post-grading email crash:`, err));
         }

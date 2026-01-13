@@ -180,7 +180,7 @@ router.post('/:id/send-results-bulk', async (req, res) => {
         let failCount = 0;
 
         const emailPromises = submissions.map(sub => {
-            return sendResultEmail(sub.candidateEmail, sub.candidateName, exam.title, sub.totalScore, totalPossibleMarks)
+            return sendResultEmail(sub.candidateEmail, sub.candidateName, exam.title, sub.totalScore, totalPossibleMarks, questions, sub.answers)
                 .then(success => {
                     if (success) successCount++;
                     else failCount++;
