@@ -237,6 +237,7 @@ router.patch('/:id/grade', async (req, res) => {
             submission.status = 'GRADED';
         }
 
+        submission.markModified('answers');
         await submission.save();
 
         // Send Email if transitioned to GRADED and automatedEmail is ON
