@@ -261,6 +261,9 @@ export default function AssessmentInterface() {
     }
 
     if (submitted) {
+        // Check if exam contains any short answer questions
+        const hasShortAnswers = questions.some(q => q.type === "SHORT_ANSWER" || q.type === "SHORT_TEXT");
+
         return (
             <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden font-outfit text-center">
                 {/* Square Grid Background */}
@@ -287,13 +290,23 @@ export default function AssessmentInterface() {
                         </p>
                     </div>
 
-                    {score && (
+                    {/* Only show score if all questions are MCQ */}
+                    {score && !hasShortAnswers && (
                         <div className="inline-block bg-[#f8fafc] px-8 py-4 rounded-3xl border border-slate-100 shadow-sm">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Marks Obtained</p>
                             <div className="flex items-baseline justify-center gap-1">
                                 <span className="text-3xl font-black text-primary">{score.score}</span>
                                 <span className="text-lg font-bold text-slate-300">/ {score.totalMarks}</span>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Show message for manual evaluation if short answers exist */}
+                    {hasShortAnswers && (
+                        <div className="inline-block bg-amber-50 px-8 py-4 rounded-3xl border border-amber-100 shadow-sm">
+                            <p className="text-sm font-medium text-amber-800">
+                                Your responses are under review. Results will be available shortly.
+                            </p>
                         </div>
                     )}
 
