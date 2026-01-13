@@ -250,4 +250,29 @@ router.patch('/:id/grade', async (req, res) => {
     }
 });
 
+// Check attempts for a specific email
+router.get('/check-attempts', async (req, res) => {
+    try {
+        const { examId, email } = req.query;
+        if (!examId || !email) {
+            return res.status(400).json({ error: 'Exam ID and Email are required' });
+        }
+
+        const exam = await Exam.findById(examId);
+        if (!exam) return res.status(404).json({ error: 'Exam not found' });
+
+        const previousSubmissions = await Submission.countDocuments({ examId, candidateEmail: email.toLowerCase() });
+        const maxAttempts = exam.settings.maxAttempts || 1;
+
+        res.json({
+            attempts: previousSubmissions,
+            maxAttempts,
+            allowed: previousSubmissions < maxAttempts
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

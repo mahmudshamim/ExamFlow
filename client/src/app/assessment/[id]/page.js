@@ -26,6 +26,9 @@ export default function AssessmentInterface() {
     const [showErrors, setShowErrors] = useState(false);
     const [warningShown, setWarningShown] = useState(false);
     const [error, setError] = useState(null);
+    const [checkingEmail, setCheckingEmail] = useState(false);
+    const [emailAllowed, setEmailAllowed] = useState(true);
+    const [attemptError, setAttemptError] = useState("");
 
     useEffect(() => {
         const fetchAssessment = async () => {
@@ -53,6 +56,36 @@ export default function AssessmentInterface() {
         }, 1000);
         return () => clearInterval(timer);
     }, [hasStarted, timeLeft]);
+
+    // Check attempts in real-time
+    useEffect(() => {
+        const checkAttempts = async () => {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(candidateInfo.email)) {
+                setCheckingEmail(true);
+                setAttemptError("");
+                try {
+                    const res = await axios.get(`${API_URL}/submissions/check-attempts`, {
+                        params: { examId: id, email: candidateInfo.email }
+                    });
+                    setEmailAllowed(res.data.allowed);
+                    if (!res.data.allowed) {
+                        setAttemptError(`Maximum attempts (${res.data.maxAttempts}) reached for this email.`);
+                    }
+                } catch (err) {
+                    console.error('Attempt check failed:', err);
+                } finally {
+                    setCheckingEmail(false);
+                }
+            } else {
+                setEmailAllowed(true);
+                setAttemptError("");
+            }
+        };
+
+        const timeoutId = setTimeout(checkAttempts, 500);
+        return () => clearTimeout(timeoutId);
+    }, [candidateInfo.email, id]);
 
     useEffect(() => {
         if (timeLeft <= 60 && timeLeft > 0 && !warningShown && hasStarted && !submitted) {
@@ -390,19 +423,25 @@ export default function AssessmentInterface() {
                                 {candidateInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) && (
                                     <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider">Invalid email format</p>
                                 )}
+                                {attemptError && (
+                                    <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-wider animate-pulse">{attemptError}</p>
+                                )}
+                                {checkingEmail && (
+                                    <p className="text-[10px] text-primary font-bold ml-1 uppercase tracking-wider">Checking attempts...</p>
+                                )}
                             </div>
                         </div>
                         <button
                             onClick={() => {
                                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                if (candidateInfo.name && emailRegex.test(candidateInfo.email)) {
+                                if (candidateInfo.name && emailRegex.test(candidateInfo.email) && emailAllowed) {
                                     setHasStarted(true);
                                 }
                             }}
-                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email)}
+                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail}
                             className="w-full btn-primary py-5 text-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
-                            Start Assessment <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                            {checkingEmail ? 'Processing...' : 'Start Assessment'} <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
                 </div>
