@@ -55,7 +55,7 @@ export default function AssessmentInterface() {
     }, [hasStarted, timeLeft]);
 
     useEffect(() => {
-        if (timeLeft <= 60 && timeLeft > 0 && !warningShown) {
+        if (timeLeft <= 60 && timeLeft > 0 && !warningShown && hasStarted && !submitted) {
             Swal.fire({
                 title: '1 Minute Left!',
                 text: 'The assessment will end in 1 minute. Please finalize your answers and prepare to submit.',
@@ -67,7 +67,7 @@ export default function AssessmentInterface() {
             });
             setWarningShown(true);
         }
-    }, [timeLeft, warningShown]);
+    }, [timeLeft, warningShown, hasStarted, submitted]);
 
     const formatTime = (seconds) => {
         const h = Math.floor(seconds / 3600);
