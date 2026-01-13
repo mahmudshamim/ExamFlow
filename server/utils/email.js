@@ -1,11 +1,16 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // Or use SMTP settings from .env
+    service: 'gmail',
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
-    }
+    },
+    pool: true,              // Enable connection pooling
+    maxConnections: 5,       // Use up to 5 simultaneous connections
+    maxMessages: 100,        // Send max 100 messages per connection
+    rateDelta: 1000,         // 1 second between messages
+    rateLimit: 5             // Max 5 messages per rateDelta
 });
 
 const sendResultEmail = async (to, employeeName, assessmentTitle, score, totalMarks, questions = [], answers = []) => {
