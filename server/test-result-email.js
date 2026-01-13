@@ -9,10 +9,11 @@ const testData = {
     score: 8,
     totalMarks: 10,
     questions: [
-        { _id: '1', text: 'What is JavaScript?', marks: 2 },
-        { _id: '2', text: 'Explain React hooks', marks: 3 },
-        { _id: '3', text: 'What is Node.js?', marks: 2 },
-        { _id: '4', text: 'Describe MongoDB', marks: 3 }
+        { _id: '1', text: 'Explain what a Closure is in JavaScript.', marks: 5 },
+        { _id: '2', text: 'What is the output of typeof null in JavaScript?', marks: 1 },
+        { _id: '3', text: 'Describe the difference between == and === in Java and also explain why it is important to know the difference in multi-threaded environment where synchronization matters.', marks: 2 },
+        { _id: '4', text: 'Which keyword is used to define a constant in ES6?', marks: 1 },
+        { _id: '5', text: 'What does NaN stand for?', marks: 1 }
     ],
     answers: [
         { questionId: '1', marksObtained: 2, isGraded: true },

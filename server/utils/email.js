@@ -42,10 +42,8 @@ const sendResultEmail = async (to, employeeName, assessmentTitle, score, totalMa
                 const isCorrect = marksObtained > 0;
                 const isPending = !answer?.isGraded;
 
-                // Truncate question text if too long
-                const questionText = question.text.length > 50
-                    ? question.text.substring(0, 50) + '...'
-                    : question.text;
+                // Use full question text
+                const questionText = question.text;
 
                 // Determine status badge
                 let statusBadge;
