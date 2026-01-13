@@ -49,9 +49,9 @@ export default function ExamResultsPage() {
     const handleViewDetails = (submission) => {
         const detailsHtml = questions.map((q, idx) => {
             const candidateAnswer = submission.answers.find(a => a.questionId === q._id);
-            const marks = candidateAnswer?.marksObtained || 0;
+            const marks = candidateAnswer?.marksObtained;
             const isGraded = candidateAnswer?.isGraded;
-            const isCorrect = marks > 0;
+            const isCorrect = isGraded && marks > 0;
 
             return `
                 <div class="mb-6 p-4 bg-white rounded-xl border border-slate-100 shadow-sm text-left">
@@ -78,11 +78,11 @@ export default function ExamResultsPage() {
                             <label class="text-[10px] font-bold text-slate-400 uppercase">Assign Marks (Max ${q.marks}):</label>
                             <input 
                                 type="number" 
-                                class="manual-mark-input w-20 px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-primary"
+                                class="manual-mark-input w-24 px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-primary"
                                 data-q-id="${q._id}"
                                 max="${q.marks}"
-                                min="0"
-                                value="${marks}"
+                                placeholder="Marks"
+                                value="${isGraded ? marks : ''}"
                             />
                         </div>
                     ` : `
@@ -124,16 +124,13 @@ export default function ExamResultsPage() {
                 const inputs = document.querySelectorAll('.manual-mark-input');
 
                 inputs.forEach(input => {
-                    const val = parseFloat(input.value) || 0;
+                    const rawValue = input.value.trim();
+                    const val = rawValue === "" ? 0 : parseFloat(rawValue);
                     const max = parseFloat(input.getAttribute('max'));
-                    const qIdx = input.closest('.bg-white').querySelector('.text-slate-400').textContent; // Get "Question X" text
+                    const qIdx = input.closest('.bg-white').querySelector('.text-slate-400').textContent;
 
                     if (val > max) {
                         Swal.showValidationMessage(`${qIdx}: Marks cannot exceed ${max}`);
-                        hasError = true;
-                    }
-                    if (val < 0) {
-                        Swal.showValidationMessage(`${qIdx}: Marks cannot be negative`);
                         hasError = true;
                     }
 

@@ -218,9 +218,8 @@ router.patch('/:id/grade', async (req, res) => {
                     error: `Question "${question.text.substring(0, 30)}..." cannot have more than ${question.marks} marks. You provided ${update.marksObtained}.`
                 });
             }
-            if (update.marksObtained < 0) {
-                return res.status(400).json({ error: 'Marks cannot be negative' });
-            }
+            // Removed negative marks restriction to allow penalty marks
+
 
             const answerIndex = submission.answers.findIndex(ans => ans.questionId.toString() === update.questionId);
             if (answerIndex !== -1) {
