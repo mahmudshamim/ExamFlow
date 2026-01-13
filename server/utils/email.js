@@ -107,10 +107,16 @@ const sendResultEmail = async (to, employeeName, assessmentTitle, score, totalMa
                                 </p>
                                 
                                 <!-- Score Card -->
-                                <div style="background: #f1f5f9; border-radius: 16px; padding: 25px; margin: 20px 0; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 14px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Final Score</span>
-                                    <span style="font-size: 36px; font-weight: 800; color: #6366f1;">${score} <span style="color: #cbd5e1;">/ ${totalMarks}</span></span>
-                                </div>
+                                <table style="width: 100%; background: #f1f5f9; border-radius: 16px; margin: 20px 0; border: 1px solid #e2e8f0; border-collapse: separate;">
+                                    <tr>
+                                        <td style="padding: 25px 30px; text-align: left; vertical-align: middle;">
+                                            <span style="font-size: 14px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Final Score</span>
+                                        </td>
+                                        <td style="padding: 25px 30px; text-align: right; vertical-align: middle;">
+                                            <span style="font-size: 36px; font-weight: 800; color: #6366f1;">${score} <span style="font-size: 24px; color: #cbd5e1; font-weight: 700;">/ ${totalMarks}</span></span>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
 
                             ${questionBreakdownHTML}
