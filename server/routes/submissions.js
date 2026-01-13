@@ -240,17 +240,8 @@ router.patch('/:id/grade', async (req, res) => {
         submission.markModified('answers');
         await submission.save();
 
-        // Send Email if transitioned to GRADED and automatedEmail is ON
-        const exam = await Exam.findById(submission.examId);
-        if (exam && exam.settings.automatedEmail && submission.status === 'GRADED') {
-            console.log(`Triggering post-grading email for ${submission.candidateEmail}`);
-            // Calculate total possible marks for the email
-            const totalPossibleMarks = questions.reduce((sum, q) => sum + q.marks, 0);
-
-            sendResultEmail(submission.candidateEmail, submission.candidateName, exam.title, submission.totalScore, totalPossibleMarks, questions, submission.answers)
-                .then(success => console.log(`Post-grading email result: ${success}`))
-                .catch(err => console.error(`Post-grading email crash:`, err));
-        }
+        // Automated email removed from manual grading route. 
+        // Admin will now send results manually from the dashboard.
 
         res.json({ message: 'Grading updated successfully', submission });
     } catch (err) {
