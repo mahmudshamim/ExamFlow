@@ -124,12 +124,18 @@ export default function ExamResultsPage() {
                 const inputs = document.querySelectorAll('.manual-mark-input');
 
                 inputs.forEach(input => {
+                    // Reset previous error styling
+                    input.classList.remove('border-red-500', 'ring-2', 'ring-red-100');
+                    input.classList.add('border-slate-200');
+
                     const rawValue = input.value.trim();
                     const val = rawValue === "" ? 0 : parseFloat(rawValue);
                     const max = parseFloat(input.getAttribute('max'));
                     const qIdx = input.closest('.bg-white').querySelector('.text-slate-400').textContent;
 
                     if (val > max) {
+                        input.classList.add('border-red-500', 'ring-2', 'ring-red-100');
+                        input.classList.remove('border-slate-200');
                         Swal.showValidationMessage(`${qIdx}: Marks cannot exceed ${max}`);
                         hasError = true;
                     }
