@@ -133,9 +133,8 @@ export default function AssessmentInterface() {
             if (!document.fullscreenElement && assessment.settings.requireFullscreen) {
                 setIsFullscreen(false);
                 handleViolation('FULLSCREEN_EXIT');
-                if (mode === 'STRICT') {
-                    setShowViolationModal(true);
-                }
+                // Even in SILENT mode, if fullscreen is REQUIRED, we must show the modal to re-enter
+                setShowViolationModal(true);
             } else if (document.fullscreenElement) {
                 setIsFullscreen(true);
             }
@@ -591,7 +590,7 @@ export default function AssessmentInterface() {
                         </div>
 
                         {/* Rules Gate Agreement */}
-                        {assessment.settings?.enableAntiCheat && (
+                        {assessment.settings?.enableAntiCheat && assessment.settings?.antiCheatMode === 'STRICT' && (
                             <div className="bg-amber-50/50 p-5 rounded-3xl border border-amber-100/50 text-left space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                 <div className="flex items-center gap-2 text-amber-700">
                                     <ShieldCheck size={18} />
@@ -658,7 +657,7 @@ export default function AssessmentInterface() {
                                     }
                                 }
                             }}
-                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail || (assessment.settings?.enableAntiCheat && !agreedToRules)}
+                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail || (assessment.settings?.enableAntiCheat && assessment.settings?.antiCheatMode === 'STRICT' && !agreedToRules)}
                             className="w-full btn-primary py-5 text-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group transition-all"
                         >
                             {checkingEmail ? 'Processing...' : 'Start Assessment'} <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
