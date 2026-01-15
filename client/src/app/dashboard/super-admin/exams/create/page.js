@@ -557,30 +557,28 @@ export default function CreateExamPage() {
                                 </div>
                             )}
 
-                            {examData.settings.enableAntiCheat && (
-                                <div className="flex items-center gap-3 bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 transition-all hover:bg-blue-50/80">
-                                    <ShieldCheck size={18} className={examData.settings.requireFullscreen ? "text-blue-600" : "text-slate-400"} />
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-[9px] uppercase tracking-wider text-blue-400 leading-none mb-1">Force Fullscreen</span>
-                                        <label className="flex items-center cursor-pointer gap-2">
-                                            <div className="relative">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only"
-                                                    checked={examData.settings.requireFullscreen}
-                                                    onChange={e => setExamData({
-                                                        ...examData,
-                                                        settings: { ...examData.settings, requireFullscreen: e.target.checked }
-                                                    })}
-                                                />
-                                                <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings.requireFullscreen ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
-                                                <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings.requireFullscreen ? 'transform translate-x-4' : ''}`}></div>
-                                            </div>
-                                            <span className="text-[10px] font-bold text-blue-600">{examData.settings.requireFullscreen ? "ON" : "OFF"}</span>
-                                        </label>
-                                    </div>
+                            <div className="flex items-center gap-3 bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 transition-all hover:bg-blue-50/80">
+                                <ShieldCheck size={18} className={examData.settings.requireFullscreen ? "text-blue-600" : "text-slate-400"} />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-[9px] uppercase tracking-wider text-blue-400 leading-none mb-1">Force Fullscreen</span>
+                                    <label className="flex items-center cursor-pointer gap-2">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={examData.settings.requireFullscreen}
+                                                onChange={e => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, requireFullscreen: e.target.checked }
+                                                })}
+                                            />
+                                            <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings.requireFullscreen ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                                            <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings.requireFullscreen ? 'transform translate-x-4' : ''}`}></div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-blue-600">{examData.settings.requireFullscreen ? "ON" : "OFF"}</span>
+                                    </label>
                                 </div>
-                            )}
+                            </div>
 
                             {examData.settings.enableAntiCheat && (
                                 <div className="flex items-center gap-3 bg-purple-50/50 px-4 py-2 rounded-xl border border-purple-100 transition-all hover:bg-purple-50/80">
