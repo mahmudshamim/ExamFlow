@@ -32,6 +32,8 @@ export default function AssessmentInterface() {
     const [switchCount, setSwitchCount] = useState(0);
     const [submissionId, setSubmissionId] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [agreedToRules, setAgreedToRules] = useState(false);
+    const [showViolationModal, setShowViolationModal] = useState(false);
     const lastViolationTime = useRef(0);
     const autosaveTimer = useRef(null);
 
@@ -75,9 +77,8 @@ export default function AssessmentInterface() {
                     }).then(() => {
                         handleSubmit(true, newCount, true); // Auto-submit with policy flag
                     });
-                } else {
-                    showShieldWarning(`Warning: Violation detected (${type}). Remaining: ${limit - newCount}`);
                 }
+                // We don't show toast here if we use the "Blocking Modal" on return
                 return newCount;
             });
         };
@@ -85,6 +86,9 @@ export default function AssessmentInterface() {
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 handleViolation('TAB_HIDDEN');
+            } else {
+                // When returning, if we are in progress, show the blocking modal
+                setShowViolationModal(true);
             }
         };
 
@@ -92,10 +96,18 @@ export default function AssessmentInterface() {
             handleViolation('WINDOW_BLUR');
         };
 
+        const handleFocus = () => {
+            // When user returns to window
+            if (switchCount > 0) {
+                setShowViolationModal(true);
+            }
+        };
+
         const handleFullscreenChange = () => {
             if (!document.fullscreenElement && assessment.settings.requireFullscreen) {
                 setIsFullscreen(false);
                 handleViolation('FULLSCREEN_EXIT');
+                setShowViolationModal(true); // Force modal if they escaped fullscreen
             } else if (document.fullscreenElement) {
                 setIsFullscreen(true);
             }
@@ -103,14 +115,16 @@ export default function AssessmentInterface() {
 
         window.addEventListener('visibilitychange', handleVisibilityChange);
         window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
         document.addEventListener('fullscreenchange', handleFullscreenChange);
 
         return () => {
             window.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('blur', handleBlur);
+            window.removeEventListener('focus', handleFocus);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         };
-    }, [hasStarted, submitted, assessment, submissionId]);
+    }, [hasStarted, submitted, assessment, submissionId, switchCount]);
 
     // Periodic Autosave logic
     useEffect(() => {
@@ -547,6 +561,37 @@ export default function AssessmentInterface() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Rules Gate Agreement */}
+                        {assessment.settings?.enableAntiCheat && (
+                            <div className="bg-amber-50/50 p-5 rounded-3xl border border-amber-100/50 text-left space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <div className="flex items-center gap-2 text-amber-700">
+                                    <ShieldCheck size={18} />
+                                    <span className="text-xs font-black uppercase tracking-wider">Anti-Cheat Rules</span>
+                                </div>
+                                <ul className="text-xs text-slate-600 font-medium space-y-2 list-disc ml-4">
+                                    <li>Switching tabs or minimizing the window is strictly prohibited.</li>
+                                    <li>Loss of window focus will be recorded as a violation.</li>
+                                    {assessment.settings.requireFullscreen && <li>Fullscreen mode is mandatory throughout the exam.</li>}
+                                    <li>Exceeding <b>{assessment.settings.tabSwitchLimit} violations</b> will lead to automatic submission.</li>
+                                </ul>
+                                <label className="flex items-start gap-3 cursor-pointer group pt-2">
+                                    <div className="relative mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only"
+                                            checked={agreedToRules}
+                                            onChange={(e) => setAgreedToRules(e.target.checked)}
+                                        />
+                                        <div className={`w-5 h-5 rounded-lg border-2 transition-all ${agreedToRules ? 'bg-amber-500 border-amber-500' : 'border-slate-300 group-hover:border-amber-400'}`}>
+                                            {agreedToRules && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" className="w-full h-full p-1"><path d="M20 6L9 17l-5-5" /></svg>}
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-700 select-none">I understand and agree to the anti-cheat rules.</span>
+                                </label>
+                            </div>
+                        )}
+
                         <button
                             onClick={async () => {
                                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -585,8 +630,8 @@ export default function AssessmentInterface() {
                                     }
                                 }
                             }}
-                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail}
-                            className="w-full btn-primary py-5 text-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group"
+                            disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail || (assessment.settings?.enableAntiCheat && !agreedToRules)}
+                            className="w-full btn-primary py-5 text-xl flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed group transition-all"
                         >
                             {checkingEmail ? 'Processing...' : 'Start Assessment'} <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -598,7 +643,58 @@ export default function AssessmentInterface() {
 
 
     return (
-        <div className="min-h-screen bg-[#f0ebf8] flex flex-col">
+        <div className="min-h-screen bg-[#f0ebf8] flex flex-col relative">
+            {/* Blocking Violation Modal */}
+            {showViolationModal && switchCount > 0 && !submitted && (
+                <div className="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-2xl text-center space-y-8 animate-in zoom-in duration-500">
+                        <div className="w-24 h-24 bg-red-100 rounded-3xl flex items-center justify-center mx-auto ring-8 ring-red-50">
+                            <AlertTriangle className="text-red-600 animate-bounce" size={48} />
+                        </div>
+
+                        <div className="space-y-3">
+                            <h2 className="text-3xl font-black text-slate-800">Security Alert</h2>
+                            <p className="text-slate-500 font-medium leading-relaxed">
+                                You left the exam window. This event has been recorded as a violation.
+                            </p>
+                        </div>
+
+                        <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Current Status</span>
+                                <span className="text-xs font-bold text-red-600">{switchCount} / {assessment.settings.tabSwitchLimit} Violations</span>
+                            </div>
+                            <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-red-500 transition-all duration-1000"
+                                    style={{ width: `${(switchCount / assessment.settings.tabSwitchLimit) * 100}%` }}
+                                ></div>
+                            </div>
+                            <p className="mt-4 text-[11px] text-slate-400 font-bold leading-tight italic">
+                                Note: Reaching the limit will trigger automatic submission.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                if (assessment.settings.requireFullscreen && !document.fullscreenElement) {
+                                    try {
+                                        await document.documentElement.requestFullscreen();
+                                        setIsFullscreen(true);
+                                    } catch (err) {
+                                        console.error("Fullscreen re-entry failed:", err);
+                                    }
+                                }
+                                setShowViolationModal(false);
+                            }}
+                            className="w-full btn-primary py-5 text-xl shadow-xl shadow-primary/20 active:scale-95 transition-all"
+                        >
+                            {assessment.settings.requireFullscreen && !document.fullscreenElement ? 'Re-enter Fullscreen' : 'Continue Exam'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <nav className="glass sticky top-0 z-50 px-4 md:px-8 py-3 md:py-4 flex justify-between items-center border-b border-[#dadce0]">
                 <div className="flex items-center gap-2 md:gap-4 overflow-hidden">
                     {assessment.coverImage ? (
