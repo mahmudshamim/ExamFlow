@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import API_URL from '@/config';
-import { ChevronLeft, Download, Search, CheckCircle, XCircle, Trash2, Eye, FileText, Mail } from 'lucide-react';
+import { ChevronLeft, Download, Search, CheckCircle, XCircle, Trash2, Eye, FileText, Mail, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
 
@@ -15,6 +15,7 @@ export default function ExamResultsPage() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('ALL'); // ALL, SUSPICIOUS, ENDED_BY_POLICY
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,10 +42,15 @@ export default function ExamResultsPage() {
         if (id) fetchData();
     }, [id]);
 
-    const filteredSubmissions = submissions.filter(sub =>
-        sub.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sub.candidateEmail.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredSubmissions = submissions.filter(sub => {
+        const matchesSearch = sub.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            sub.candidateEmail.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (filterType === 'SUSPICIOUS') return matchesSearch && sub.metadata?.tabSwitchCount > 0;
+        if (filterType === 'ENDED_BY_POLICY') return matchesSearch && sub.metadata?.endedByPolicy;
+
+        return matchesSearch;
+    });
 
     const handleViewDetails = (submission) => {
         const detailsHtml = questions.map((q, idx) => {
@@ -101,8 +107,32 @@ export default function ExamResultsPage() {
                 <div class="text-left border-b border-slate-100 pb-3 mb-4 -mt-2">
                     <p class="text-[10px] uppercase tracking-wider text-slate-400 font-black mb-0.5">Submission Review</p>
                     <p class="text-xl font-black text-slate-900 leading-tight">${submission.candidateName}</p>
+                    ${submission.metadata?.endedByPolicy ? `
+                        <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-50 border border-red-100 text-red-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <span class="text-[10px] font-black uppercase">Terminated by Policy</span>
+                        </div>
+                    ` : ''}
                 </div>
-                <div class="max-h-[65vh] overflow-y-auto pr-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 custom-scrollbar">
+
+                ${submission.metadata?.violationLogs?.length > 0 ? `
+                    <div class="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Violation Timeline (${submission.metadata.tabSwitchCount})</p>
+                        <div class="space-y-2">
+                            ${submission.metadata.violationLogs.map(log => `
+                                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-50 shadow-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full ${log.type === 'TAB_HIDDEN' ? 'bg-orange-400' : log.type === 'WINDOW_BLUR' ? 'bg-amber-400' : 'bg-red-400'}"></div>
+                                        <span class="text-xs font-bold text-slate-700 uppercase tracking-tighter">${log.type.replace('_', ' ')}</span>
+                                    </div>
+                                    <span class="text-[10px] font-medium text-slate-400 font-mono">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="max-h-[50vh] overflow-y-auto pr-2 bg-slate-50/50 p-4 rounded-2xl border border-slate-100 custom-scrollbar">
                     ${detailsHtml}
                 </div>
             `,
@@ -443,15 +473,47 @@ export default function ExamResultsPage() {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
-                    <Search className="text-slate-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        className="flex-1 outline-none text-slate-700 font-medium"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4">
+                        <Search className="text-slate-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            className="flex-1 outline-none text-slate-700 font-medium"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-1">
+                        <button
+                            onClick={() => setFilterType('ALL')}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all",
+                                filterType === 'ALL' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
+                            )}
+                        >
+                            All
+                        </button>
+                        <button
+                            onClick={() => setFilterType('SUSPICIOUS')}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                                filterType === 'SUSPICIOUS' ? "bg-amber-100 text-amber-700 border border-amber-200" : "text-slate-500 hover:bg-slate-50"
+                            )}
+                        >
+                            Suspicious
+                        </button>
+                        <button
+                            onClick={() => setFilterType('ENDED_BY_POLICY')}
+                            className={cn(
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                                filterType === 'ENDED_BY_POLICY' ? "bg-red-100 text-red-700 border border-red-200" : "text-slate-500 hover:bg-slate-50"
+                            )}
+                        >
+                            Policy Ended
+                        </button>
+                    </div>
                 </div>
 
                 {/* Results Table */}
@@ -504,6 +566,16 @@ export default function ExamResultsPage() {
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 whitespace-nowrap">
                                                     <CheckCircle size={12} /> Graded
+                                                </span>
+                                            )}
+                                            {sub.metadata?.isFlagged && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 whitespace-nowrap mt-1 ml-1" title={`Violations: ${sub.metadata?.tabSwitchCount}`}>
+                                                    <AlertTriangle size={12} /> Flagged
+                                                </span>
+                                            )}
+                                            {sub.metadata?.tabSwitchCount > 0 && !sub.metadata?.isFlagged && (
+                                                <span className="block text-[10px] text-amber-600 font-bold mt-1">
+                                                    {sub.metadata.tabSwitchCount} Switches Detected
                                                 </span>
                                             )}
                                         </td>

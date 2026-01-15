@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from 'next/link';
 import API_URL from '@/config';
@@ -29,6 +29,110 @@ export default function AssessmentInterface() {
     const [checkingEmail, setCheckingEmail] = useState(false);
     const [emailAllowed, setEmailAllowed] = useState(true);
     const [attemptError, setAttemptError] = useState("");
+    const [switchCount, setSwitchCount] = useState(0);
+    const [submissionId, setSubmissionId] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const lastViolationTime = useRef(0);
+    const autosaveTimer = useRef(null);
+
+    // Anti-Cheat Tracking (Tab Switch, Blur, Fullscreen)
+    useEffect(() => {
+        if (!hasStarted || submitted || !assessment?.settings?.enableAntiCheat) return;
+
+        const limit = assessment.settings.tabSwitchLimit || 0;
+
+        const logViolationToBackend = async (type) => {
+            if (!submissionId) return;
+            try {
+                await axios.patch(`${API_URL}/submissions/${submissionId}/log-violation`, { type });
+            } catch (err) {
+                console.error("Failed to log violation:", err);
+            }
+        };
+
+        const handleViolation = (type = 'TAB_HIDDEN') => {
+            // Debounce: 5 seconds window
+            const now = Date.now();
+            if (now - lastViolationTime.current < 5000) {
+                console.log("Violation debounced");
+                return;
+            }
+            lastViolationTime.current = now;
+
+            setSwitchCount(prev => {
+                const newCount = prev + 1;
+
+                // Log to backend immediately
+                logViolationToBackend(type);
+
+                if (limit > 0 && newCount >= limit) {
+                    Swal.fire({
+                        title: 'Exam Terminated',
+                        text: 'You have exceeded the allowed number of violations. Your exam is being submitted automatically.',
+                        icon: 'error',
+                        timer: 3000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        handleSubmit(true, newCount, true); // Auto-submit with policy flag
+                    });
+                } else {
+                    showShieldWarning(`Warning: Violation detected (${type}). Remaining: ${limit - newCount}`);
+                }
+                return newCount;
+            });
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                handleViolation('TAB_HIDDEN');
+            }
+        };
+
+        const handleBlur = () => {
+            handleViolation('WINDOW_BLUR');
+        };
+
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && assessment.settings.requireFullscreen) {
+                setIsFullscreen(false);
+                handleViolation('FULLSCREEN_EXIT');
+            } else if (document.fullscreenElement) {
+                setIsFullscreen(true);
+            }
+        };
+
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+        return () => {
+            window.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleBlur);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        };
+    }, [hasStarted, submitted, assessment, submissionId]);
+
+    // Periodic Autosave logic
+    useEffect(() => {
+        if (!hasStarted || submitted || !submissionId) return;
+
+        autosaveTimer.current = setInterval(async () => {
+            try {
+                const answersPayload = Object.keys(answers).map(qId => ({
+                    questionId: qId,
+                    answer: answers[qId]
+                }));
+                await axios.patch(`${API_URL}/submissions/${submissionId}/autosave`, { answers: answersPayload });
+                console.log("Progress autosaved");
+            } catch (err) {
+                console.error("Autosave failed:", err);
+            }
+        }, 30000); // Every 30 seconds
+
+        return () => {
+            if (autosaveTimer.current) clearInterval(autosaveTimer.current);
+        };
+    }, [hasStarted, submitted, submissionId, answers]);
 
     useEffect(() => {
         const fetchAssessment = async () => {
@@ -196,8 +300,10 @@ export default function AssessmentInterface() {
         setShowConfirm(true);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (isAuto = false, currentSwitchCount = switchCount, endedByPolicy = false) => {
         setSubmitting(true);
+        if (autosaveTimer.current) clearInterval(autosaveTimer.current);
+
         try {
             const submissionData = {
                 examId: id,
@@ -206,7 +312,11 @@ export default function AssessmentInterface() {
                 answers: Object.keys(answers).map(qId => ({
                     questionId: qId,
                     answer: answers[qId]
-                }))
+                })),
+                tabSwitchCount: currentSwitchCount,
+                isFlagged: isAuto || currentSwitchCount > 0,
+                endedByPolicy,
+                submissionId // Pass existing submission ID to update the draft
             };
 
             const res = await axios.post(`${API_URL}/submissions`, submissionData);
@@ -215,11 +325,17 @@ export default function AssessmentInterface() {
                 setScore(res.data);
                 setSubmitted(true);
                 setShowConfirm(false);
+
+                // Exit Fullscreen if active
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(err => console.error(err));
+                }
+
                 Swal.fire({
-                    title: 'Submitted!',
-                    text: 'Your assessment has been recorded.',
-                    icon: 'success',
-                    timer: 2000,
+                    title: isAuto ? 'Exam Terminated' : 'Submitted!',
+                    text: isAuto ? 'The exam was automatically submitted due to policy violations.' : 'Your assessment has been recorded.',
+                    icon: isAuto ? 'warning' : 'success',
+                    timer: 3000,
                     showConfirmButton: false,
                     confirmButtonColor: '#1565C0',
                 });
@@ -228,7 +344,7 @@ export default function AssessmentInterface() {
             console.error(err);
             Swal.fire({
                 title: 'Submission Failed',
-                text: err.response?.data?.error || 'Something went wrong',
+                text: err.response?.data?.error || 'Something went wrong while submitting. Please try again.',
                 icon: 'error',
                 confirmButtonColor: '#1565C0',
             });
@@ -432,10 +548,41 @@ export default function AssessmentInterface() {
                             </div>
                         </div>
                         <button
-                            onClick={() => {
+                            onClick={async () => {
                                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                                 if (candidateInfo.name && emailRegex.test(candidateInfo.email) && emailAllowed) {
-                                    setHasStarted(true);
+                                    setCheckingEmail(true);
+                                    try {
+                                        // 1. Create Draft Submission
+                                        const res = await axios.post(`${API_URL}/submissions/start`, {
+                                            examId: id,
+                                            candidateEmail: candidateInfo.email,
+                                            candidateName: candidateInfo.name
+                                        });
+                                        setSubmissionId(res.data.submissionId);
+
+                                        // 2. Request Fullscreen if required
+                                        if (assessment.settings?.requireFullscreen) {
+                                            try {
+                                                await document.documentElement.requestFullscreen();
+                                                setIsFullscreen(true);
+                                            } catch (err) {
+                                                console.error("Fullscreen request failed:", err);
+                                                Swal.fire({
+                                                    title: 'Fullscreen Required',
+                                                    text: 'This exam requires fullscreen mode. Please enable it to continue.',
+                                                    icon: 'warning'
+                                                });
+                                                return;
+                                            }
+                                        }
+
+                                        setHasStarted(true);
+                                    } catch (err) {
+                                        setAttemptError(err.response?.data?.error || "Failed to initiate assessment.");
+                                    } finally {
+                                        setCheckingEmail(false);
+                                    }
                                 }
                             }}
                             disabled={!candidateInfo.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateInfo.email) || !emailAllowed || checkingEmail}

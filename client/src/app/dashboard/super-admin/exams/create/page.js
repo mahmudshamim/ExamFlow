@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import API_URL from '@/config';
-import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon, ShieldCheck, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,7 +30,10 @@ export default function CreateExamPage() {
         settings: {
             negativeMarkingEnabled: false,
             automatedEmail: true,
-            maxAttempts: 1
+            maxAttempts: 1,
+            tabSwitchLimit: 0,
+            enableAntiCheat: false,
+            requireFullscreen: false
         }
     });
 
@@ -500,6 +503,105 @@ export default function CreateExamPage() {
                                         popperPlacement="bottom-start"
                                         className="bg-transparent outline-none font-bold text-gray-900 text-xs w-[150px]"
                                     />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Security Settings Row */}
+                        <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-50">
+                            <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 transition-all hover:bg-slate-100/80">
+                                <ShieldCheck size={18} className={examData.settings.enableAntiCheat ? "text-primary" : "text-slate-400"} />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-[9px] uppercase tracking-wider text-slate-400 leading-none mb-1">Anti-Cheat Mode</span>
+                                    <label className="flex items-center cursor-pointer gap-2">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={examData.settings.enableAntiCheat}
+                                                onChange={e => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, enableAntiCheat: e.target.checked }
+                                                })}
+                                            />
+                                            <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings.enableAntiCheat ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                                            <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings.enableAntiCheat ? 'transform translate-x-4' : ''}`}></div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-600">{examData.settings.enableAntiCheat ? "ENABLED" : "DISABLED"}</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {examData.settings.enableAntiCheat && (
+                                <div className="flex items-center gap-3 bg-red-50/50 px-4 py-2 rounded-xl border border-red-100 transition-all hover:bg-red-50/80 animate-in zoom-in duration-300">
+                                    <AlertTriangle size={18} className="text-red-500" />
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-[9px] uppercase tracking-wider text-red-400 leading-none mb-1">Switch Limit</span>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                value={examData.settings.tabSwitchLimit}
+                                                onChange={e => {
+                                                    const val = parseInt(e.target.value);
+                                                    setExamData({
+                                                        ...examData,
+                                                        settings: { ...examData.settings, tabSwitchLimit: isNaN(val) ? 0 : val }
+                                                    });
+                                                }}
+                                                className="w-8 bg-transparent outline-none font-bold text-red-600 text-xs border-b border-red-200 focus:border-red-500"
+                                            />
+                                            <span className="text-[10px] font-bold text-red-500 uppercase">Times</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {examData.settings.enableAntiCheat && (
+                                <div className="flex items-center gap-3 bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100 transition-all hover:bg-blue-50/80">
+                                    <ShieldCheck size={18} className={examData.settings.requireFullscreen ? "text-blue-600" : "text-slate-400"} />
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-[9px] uppercase tracking-wider text-blue-400 leading-none mb-1">Force Fullscreen</span>
+                                        <label className="flex items-center cursor-pointer gap-2">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only"
+                                                    checked={examData.settings.requireFullscreen}
+                                                    onChange={e => setExamData({
+                                                        ...examData,
+                                                        settings: { ...examData.settings, requireFullscreen: e.target.checked }
+                                                    })}
+                                                />
+                                                <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings.requireFullscreen ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                                                <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings.requireFullscreen ? 'transform translate-x-4' : ''}`}></div>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-blue-600">{examData.settings.requireFullscreen ? "ON" : "OFF"}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Existing Settings Toggle (Negative Marking) */}
+                            <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 transition-all hover:bg-gray-100/80">
+                                <AlertTriangle size={18} className={examData.settings.negativeMarkingEnabled ? "text-orange-500" : "text-gray-400"} />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-[9px] uppercase tracking-wider text-gray-400 leading-none mb-1">Negative Marking</span>
+                                    <label className="flex items-center cursor-pointer gap-2">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={examData.settings.negativeMarkingEnabled}
+                                                onChange={e => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, negativeMarkingEnabled: e.target.checked }
+                                                })}
+                                            />
+                                            <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings.negativeMarkingEnabled ? 'bg-orange-500' : 'bg-gray-300'}`}></div>
+                                            <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings.negativeMarkingEnabled ? 'transform translate-x-4' : ''}`}></div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-600">{examData.settings.negativeMarkingEnabled ? "ON" : "OFF"}</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>

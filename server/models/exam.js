@@ -15,7 +15,11 @@ const examSchema = new mongoose.Schema({
         automatedEmail: { type: Boolean, default: false },
         generatePDF: { type: Boolean, default: false },
         maxAttempts: { type: Number, default: 1 },
-        restrictIP: { type: Boolean, default: false }
+        restrictIP: { type: Boolean, default: false },
+        tabSwitchLimit: { type: Number, default: 0 }, // 0 means disabled
+        enableAntiCheat: { type: Boolean, default: false },
+        actionOnLimit: { type: String, enum: ['AUTO_SUBMIT', 'NOTIFY_ONLY'], default: 'AUTO_SUBMIT' },
+        requireFullscreen: { type: Boolean, default: false }
     },
     createdAt: { type: Date, default: Date.now }
 });

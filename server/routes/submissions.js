@@ -5,10 +5,67 @@ const Exam = require('../models/exam');
 const Question = require('../models/question');
 const { sendResultEmail } = require('../utils/email');
 
-// Submit Assessment
+// Initialize Submission (Draft)
+router.post('/start', async (req, res) => {
+    try {
+        const { examId, candidateEmail, candidateName } = req.body;
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+        const submission = new Submission({
+            examId,
+            candidateEmail,
+            candidateName,
+            status: 'IN_PROGRESS',
+            metadata: {
+                ipAddress,
+                userAgent: req.headers['user-agent']
+            }
+        });
+
+        await submission.save();
+        res.status(201).json({ submissionId: submission._id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Log Violation in Real-time
+router.patch('/:id/log-violation', async (req, res) => {
+    try {
+        const { type } = req.body;
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) return res.status(404).json({ error: 'Submission not found' });
+
+        submission.metadata.tabSwitchCount += 1;
+        submission.metadata.violationLogs.push({ type, timestamp: new Date() });
+
+        await submission.save();
+        res.json({ count: submission.metadata.tabSwitchCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Autosave Progress
+router.patch('/:id/autosave', async (req, res) => {
+    try {
+        const { answers } = req.body;
+        const submission = await Submission.findById(req.params.id);
+        if (!submission) return res.status(404).json({ error: 'Submission not found' });
+
+        submission.answers = answers;
+        submission.markModified('answers');
+        await submission.save();
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Submit Assessment (Finalize)
 router.post('/', async (req, res) => {
     try {
-        const { examId, candidateEmail, candidateName, answers } = req.body;
+        const { examId, candidateEmail, candidateName, answers, tabSwitchCount, isFlagged, endedByPolicy, violationLogs, submissionId } = req.body;
         const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         const userAgent = req.headers['user-agent'];
 
@@ -16,24 +73,22 @@ router.post('/', async (req, res) => {
         const exam = await Exam.findById(examId);
         if (!exam) return res.status(404).json({ error: 'Exam not found' });
 
-        // 2. Check Attempt Restriction
-        if (exam.settings.maxAttempts > 0) {
-            const previousSubmissions = await Submission.countDocuments({ examId, candidateEmail });
-            console.log(`Checking attempts for: ${candidateEmail}. Found: ${previousSubmissions}, Max: ${exam.settings.maxAttempts}`);
+        // 2. Check Attempt Restriction (only for new submissions, skip for finalizing draft)
+        if (!submissionId && exam.settings.maxAttempts > 0) {
+            const previousSubmissions = await Submission.countDocuments({ examId, candidateEmail, status: { $ne: 'IN_PROGRESS' } });
             if (previousSubmissions >= exam.settings.maxAttempts) {
                 return res.status(403).json({ error: 'Maximum attempts reached for this assessment.' });
             }
         }
 
-        // 3. Calculate Score with Negative Marking
-        const questions = await Question.find({ examId });
+        // 3. Calculate Score
+        const questionsList = await Question.find({ examId });
         let totalScore = 0;
-        // Calculate total possible marks from all questions in the database for this exam
-        let totalPossibleMarks = questions.reduce((sum, q) => sum + q.marks, 0);
+        let totalPossibleMarks = questionsList.reduce((sum, q) => sum + q.marks, 0);
         let finalStatus = 'GRADED';
 
         const gradedAnswers = answers.map(ans => {
-            const question = questions.find(q => q._id.toString() === ans.questionId);
+            const question = questionsList.find(q => q._id.toString() === ans.questionId);
             if (!question) return ans;
             let marksObtained = 0;
             let isGraded = false;
@@ -46,47 +101,54 @@ router.post('/', async (req, res) => {
                     marksObtained = -question.negativeMarking;
                 }
             } else {
-                // Short Answer or MCQ with no correct answer requires manual grading
                 finalStatus = 'PENDING';
                 isGraded = false;
             }
 
             if (isGraded) totalScore += marksObtained;
-
             return { ...ans, marksObtained, isGraded };
         });
 
-        // 3.5 Check if exam is within valid time window
-        const now = new Date();
-        if (now < new Date(exam.startTime)) {
-            return res.status(400).json({ error: 'This exam has not started yet.' });
+        // 4. Update or Create Submission
+        let submission;
+        if (submissionId) {
+            submission = await Submission.findById(submissionId);
+            submission.answers = gradedAnswers;
+            submission.totalScore = Math.max(0, totalScore);
+            submission.status = finalStatus;
+            submission.submittedAt = new Date();
+            submission.metadata.submittedAt = new Date();
+            submission.metadata.isFlagged = isFlagged || false;
+            submission.metadata.endedByPolicy = endedByPolicy || false;
+            if (violationLogs) submission.metadata.violationLogs = violationLogs;
+            if (tabSwitchCount !== undefined) submission.metadata.tabSwitchCount = tabSwitchCount;
+        } else {
+            submission = new Submission({
+                examId,
+                candidateEmail,
+                candidateName,
+                answers: gradedAnswers,
+                totalScore: Math.max(0, totalScore),
+                status: finalStatus,
+                submittedAt: new Date(),
+                metadata: {
+                    ipAddress,
+                    userAgent,
+                    submittedAt: new Date(),
+                    tabSwitchCount: tabSwitchCount || 0,
+                    isFlagged: isFlagged || false,
+                    endedByPolicy: endedByPolicy || false,
+                    violationLogs: violationLogs || []
+                }
+            });
         }
-        if (now > new Date(exam.endTime)) {
-            return res.status(400).json({ error: 'This exam has already ended.' });
-        }
-
-        // 4. Save Submission
-        const submission = new Submission({
-            examId,
-            candidateEmail,
-            candidateName,
-            answers: gradedAnswers,
-            totalScore: Math.max(0, totalScore),
-            status: finalStatus,
-            submittedAt: new Date(),
-            metadata: {
-                ipAddress,
-                userAgent,
-                submittedAt: new Date()
-            }
-        });
 
         await submission.save();
 
         // 5. Automated Email (Send immediately if toggle is ON)
         if (exam.settings.automatedEmail) {
             console.log(`Sending automated email for ${candidateEmail} (Status: ${finalStatus})`);
-            sendResultEmail(candidateEmail, candidateName, exam.title, submission.totalScore, totalPossibleMarks, questions, gradedAnswers)
+            sendResultEmail(candidateEmail, candidateName, exam.title, submission.totalScore, totalPossibleMarks, questionsList, gradedAnswers)
                 .then(success => console.log(`Post-submission email result: ${success}`))
                 .catch(err => console.error(`Post-submission email crash:`, err));
         }

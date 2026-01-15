@@ -19,7 +19,14 @@ const submissionSchema = new mongoose.Schema({
     metadata: {
         ipAddress: { type: String },
         userAgent: { type: String },
-        submittedAt: { type: Date }
+        submittedAt: { type: Date },
+        tabSwitchCount: { type: Number, default: 0 },
+        isFlagged: { type: Boolean, default: false },
+        violationLogs: [{
+            type: { type: String }, // TAB_HIDDEN, WINDOW_BLUR, FULLSCREEN_EXIT
+            timestamp: { type: Date, default: Date.now }
+        }],
+        endedByPolicy: { type: Boolean, default: false }
     },
     submittedAt: { type: Date },
     createdAt: { type: Date, default: Date.now }
