@@ -24,8 +24,11 @@ const submissionSchema = new mongoose.Schema({
         isFlagged: { type: Boolean, default: false },
         violationLogs: [{
             type: { type: String }, // TAB_HIDDEN, WINDOW_BLUR, FULLSCREEN_EXIT
-            timestamp: { type: Date, default: Date.now }
+            timestamp: { type: Date, default: Date.now },
+            duration: { type: Number, default: 0 }, // seconds
+            returnTime: { type: Date }
         }],
+        totalAwayTime: { type: Number, default: 0 }, // total seconds
         endedByPolicy: { type: Boolean, default: false }
     },
     submittedAt: { type: Date },

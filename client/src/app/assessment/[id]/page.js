@@ -35,6 +35,7 @@ export default function AssessmentInterface() {
     const [agreedToRules, setAgreedToRules] = useState(false);
     const [showViolationModal, setShowViolationModal] = useState(false);
     const lastViolationTime = useRef(0);
+    const leftAt = useRef(null);
     const autosaveTimer = useRef(null);
 
     // Anti-Cheat Tracking (Tab Switch, Blur, Fullscreen)
@@ -42,63 +43,88 @@ export default function AssessmentInterface() {
         if (!hasStarted || submitted || !assessment?.settings?.enableAntiCheat) return;
 
         const limit = assessment.settings.tabSwitchLimit || 0;
+        const mode = assessment.settings.antiCheatMode || 'STRICT';
 
-        const logViolationToBackend = async (type) => {
+        const logViolationToBackend = async (type, payload = {}) => {
             if (!submissionId) return;
             try {
-                await axios.patch(`${API_URL}/submissions/${submissionId}/log-violation`, { type });
+                await axios.patch(`${API_URL}/submissions/${submissionId}/log-violation`, {
+                    type,
+                    ...payload
+                });
             } catch (err) {
                 console.error("Failed to log violation:", err);
             }
         };
 
-        const handleViolation = (type = 'TAB_HIDDEN') => {
-            // Debounce: 5 seconds window
+        const handleViolation = (type = 'TAB_HIDDEN', payload = {}) => {
+            // Debounce: 5 seconds window (only for counting/alerting, silent logs can be more granular)
             const now = Date.now();
-            if (now - lastViolationTime.current < 5000) {
-                console.log("Violation debounced");
-                return;
+            const isDebounced = (now - lastViolationTime.current < 5000);
+
+            if (!isDebounced) {
+                lastViolationTime.current = now;
+                setSwitchCount(prev => {
+                    const newCount = prev + 1;
+                    if (mode === 'STRICT' && limit > 0 && newCount >= limit) {
+                        Swal.fire({
+                            title: 'Exam Terminated',
+                            text: 'You have exceeded the allowed number of violations. Your exam is being submitted automatically.',
+                            icon: 'error',
+                            timer: 3000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            handleSubmit(true, newCount, true); // Auto-submit with policy flag
+                        });
+                    }
+                    return newCount;
+                });
             }
-            lastViolationTime.current = now;
 
-            setSwitchCount(prev => {
-                const newCount = prev + 1;
-
-                // Log to backend immediately
-                logViolationToBackend(type);
-
-                if (limit > 0 && newCount >= limit) {
-                    Swal.fire({
-                        title: 'Exam Terminated',
-                        text: 'You have exceeded the allowed number of violations. Your exam is being submitted automatically.',
-                        icon: 'error',
-                        timer: 3000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        handleSubmit(true, newCount, true); // Auto-submit with policy flag
-                    });
-                }
-                // We don't show toast here if we use the "Blocking Modal" on return
-                return newCount;
+            // Log to backend immediately (with duration data if available)
+            logViolationToBackend(type, {
+                timestamp: now,
+                ...payload
             });
         };
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
+                leftAt.current = Date.now();
                 handleViolation('TAB_HIDDEN');
             } else {
-                // When returning, if we are in progress, show the blocking modal
-                setShowViolationModal(true);
+                // When returning
+                if (leftAt.current) {
+                    const awayDuration = Math.round((Date.now() - leftAt.current) / 1000); // seconds
+                    handleViolation('RETURNED', {
+                        duration: awayDuration,
+                        returnTime: new Date()
+                    });
+                    leftAt.current = null;
+                }
+
+                if (mode === 'STRICT' && switchCount > 0) {
+                    setShowViolationModal(true);
+                }
             }
         };
 
         const handleBlur = () => {
+            leftAt.current = Date.now();
             handleViolation('WINDOW_BLUR');
         };
 
         const handleFocus = () => {
-            // When user returns to window
-            if (switchCount > 0) {
+            if (leftAt.current) {
+                const awayDuration = Math.round((Date.now() - leftAt.current) / 1000);
+                handleViolation('RETURNED', {
+                    duration: awayDuration,
+                    returnTime: new Date()
+                });
+                leftAt.current = null;
+            }
+
+            if (mode === 'STRICT' && switchCount > 0) {
                 setShowViolationModal(true);
             }
         };
@@ -107,7 +133,9 @@ export default function AssessmentInterface() {
             if (!document.fullscreenElement && assessment.settings.requireFullscreen) {
                 setIsFullscreen(false);
                 handleViolation('FULLSCREEN_EXIT');
-                setShowViolationModal(true); // Force modal if they escaped fullscreen
+                if (mode === 'STRICT') {
+                    setShowViolationModal(true);
+                }
             } else if (document.fullscreenElement) {
                 setIsFullscreen(true);
             }

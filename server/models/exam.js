@@ -19,7 +19,8 @@ const examSchema = new mongoose.Schema({
         tabSwitchLimit: { type: Number, default: 0 }, // 0 means disabled
         enableAntiCheat: { type: Boolean, default: false },
         actionOnLimit: { type: String, enum: ['AUTO_SUBMIT', 'NOTIFY_ONLY'], default: 'AUTO_SUBMIT' },
-        requireFullscreen: { type: Boolean, default: false }
+        requireFullscreen: { type: Boolean, default: false },
+        antiCheatMode: { type: String, enum: ['STRICT', 'SILENT'], default: 'STRICT' }
     },
     createdAt: { type: Date, default: Date.now }
 });

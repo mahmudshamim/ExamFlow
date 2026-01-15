@@ -117,17 +117,33 @@ export default function ExamResultsPage() {
 
                 ${submission.metadata?.violationLogs?.length > 0 ? `
                     <div class="mb-6 bg-slate-50 border border-slate-100 rounded-2xl p-4">
-                        <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Violation Timeline (${submission.metadata.tabSwitchCount})</p>
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Violation Timeline (${submission.metadata.tabSwitchCount})</p>
+                            ${submission.metadata.totalAwayTime ? `
+                                <span class="text-[10px] font-black text-red-500 uppercase bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                                    Total Away: ${Math.floor(submission.metadata.totalAwayTime / 60)}m ${submission.metadata.totalAwayTime % 60}s
+                                </span>
+                            ` : ''}
+                        </div>
                         <div class="space-y-2">
-                            ${submission.metadata.violationLogs.map(log => `
-                                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-50 shadow-sm">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full ${log.type === 'TAB_HIDDEN' ? 'bg-orange-400' : log.type === 'WINDOW_BLUR' ? 'bg-amber-400' : 'bg-red-400'}"></div>
-                                        <span class="text-xs font-bold text-slate-700 uppercase tracking-tighter">${log.type.replace('_', ' ')}</span>
+                            ${submission.metadata.violationLogs.map(log => {
+                const isReturned = log.type === 'RETURNED';
+                const durationText = log.duration ? ` (Away for ${log.duration}s)` : '';
+                return `
+                                    <div class="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-50 shadow-sm ${isReturned ? 'opacity-60 grayscale' : ''}">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-2 h-2 rounded-full ${log.type === 'TAB_HIDDEN' ? 'bg-orange-400' :
+                        log.type === 'WINDOW_BLUR' ? 'bg-amber-400' :
+                            log.type === 'RETURNED' ? 'bg-slate-400' : 'bg-red-400'
+                    }"></div>
+                                            <span class="text-xs font-bold text-slate-700 uppercase tracking-tighter">
+                                                ${log.type.replace('_', ' ')} ${durationText}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-medium text-slate-400 font-mono">${new Date(log.timestamp).toLocaleTimeString()}</span>
                                     </div>
-                                    <span class="text-[10px] font-medium text-slate-400 font-mono">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                                </div>
-                            `).join('')}
+                                `;
+            }).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -525,6 +541,7 @@ export default function ExamResultsPage() {
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Candidate</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Score</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Status</th>
+                                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Security</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right whitespace-nowrap">Submitted At</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right whitespace-nowrap">Actions</th>
                             </tr>
@@ -568,15 +585,21 @@ export default function ExamResultsPage() {
                                                     <CheckCircle size={12} /> Graded
                                                 </span>
                                             )}
-                                            {sub.metadata?.isFlagged && (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 whitespace-nowrap mt-1 ml-1" title={`Violations: ${sub.metadata?.tabSwitchCount}`}>
-                                                    <AlertTriangle size={12} /> Flagged
-                                                </span>
-                                            )}
-                                            {sub.metadata?.tabSwitchCount > 0 && !sub.metadata?.isFlagged && (
-                                                <span className="block text-[10px] text-amber-600 font-bold mt-1">
-                                                    {sub.metadata.tabSwitchCount} Switches Detected
-                                                </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {sub.metadata?.tabSwitchCount > 0 ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase w-fit ${sub.metadata.isFlagged ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                                        {sub.metadata.tabSwitchCount} Switches
+                                                    </span>
+                                                    {sub.metadata.totalAwayTime > 0 && (
+                                                        <span className="text-[10px] font-bold text-slate-500">
+                                                            Away: {Math.floor(sub.metadata.totalAwayTime / 60)}m {sub.metadata.totalAwayTime % 60}s
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">Clean</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-right text-slate-500 font-medium whitespace-nowrap">

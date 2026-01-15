@@ -32,15 +32,30 @@ router.post('/start', async (req, res) => {
 // Log Violation in Real-time
 router.patch('/:id/log-violation', async (req, res) => {
     try {
-        const { type } = req.body;
+        const { type, duration, returnTime, timestamp } = req.body;
         const submission = await Submission.findById(req.params.id);
         if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
         submission.metadata.tabSwitchCount += 1;
-        submission.metadata.violationLogs.push({ type, timestamp: new Date() });
+
+        // Add detailed log entry
+        submission.metadata.violationLogs.push({
+            type,
+            timestamp: timestamp || new Date(),
+            duration: duration || 0,
+            returnTime: returnTime || null
+        });
+
+        // Sum up total away time
+        if (duration) {
+            submission.metadata.totalAwayTime = (submission.metadata.totalAwayTime || 0) + duration;
+        }
 
         await submission.save();
-        res.json({ count: submission.metadata.tabSwitchCount });
+        res.json({
+            count: submission.metadata.tabSwitchCount,
+            totalAwayTime: submission.metadata.totalAwayTime
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -33,7 +33,8 @@ export default function CreateExamPage() {
             maxAttempts: 1,
             tabSwitchLimit: 0,
             enableAntiCheat: false,
-            requireFullscreen: false
+            requireFullscreen: false,
+            antiCheatMode: 'STRICT'
         }
     });
 
@@ -577,6 +578,36 @@ export default function CreateExamPage() {
                                             </div>
                                             <span className="text-[10px] font-bold text-blue-600">{examData.settings.requireFullscreen ? "ON" : "OFF"}</span>
                                         </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {examData.settings.enableAntiCheat && (
+                                <div className="flex items-center gap-3 bg-purple-50/50 px-4 py-2 rounded-xl border border-purple-100 transition-all hover:bg-purple-50/80">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-[9px] uppercase tracking-wider text-purple-400 leading-none mb-1">Monitoring Mode</span>
+                                        <div className="flex bg-purple-100/50 p-0.5 rounded-lg border border-purple-100">
+                                            <button
+                                                type="button"
+                                                onClick={() => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, antiCheatMode: 'STRICT' }
+                                                })}
+                                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${examData.settings.antiCheatMode === 'STRICT' ? 'bg-purple-600 text-white shadow-sm' : 'text-purple-400 hover:text-purple-600'}`}
+                                            >
+                                                STRICT
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, antiCheatMode: 'SILENT' }
+                                                })}
+                                                className={`px-3 py-1 rounded-md text-[9px] font-black transition-all ${examData.settings.antiCheatMode === 'SILENT' ? 'bg-purple-600 text-white shadow-sm' : 'text-purple-400 hover:text-purple-600'}`}
+                                            >
+                                                SILENT
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
