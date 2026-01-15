@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import API_URL from '@/config';
 import { ChevronLeft, Download, Search, CheckCircle, XCircle, Trash2, Eye, FileText, Mail, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from "@/lib/utils";
 import Swal from 'sweetalert2';
 
 export default function ExamResultsPage() {
