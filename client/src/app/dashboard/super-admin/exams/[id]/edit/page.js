@@ -533,7 +533,7 @@ export default function EditExamPage() {
                                 </div>
                             </div>
 
-                            {examData.settings?.enableAntiCheat && (
+                            {examData.settings?.enableAntiCheat && examData.settings?.antiCheatMode === 'STRICT' && (
                                 <div className="flex items-center gap-3 bg-red-50/50 px-4 py-2 rounded-xl border border-red-100 transition-all hover:bg-red-50/80 animate-in zoom-in duration-300">
                                     <AlertTriangle size={18} className="text-red-500" />
                                     <div className="flex flex-col">
