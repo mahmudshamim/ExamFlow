@@ -935,7 +935,7 @@ export default function AssessmentInterface() {
                         <p className="text-muted-foreground">You've answered {Object.keys(answers).length} of {questions.length} questions.</p>
                         <div className="flex flex-col gap-3">
                             <button
-                                onClick={handleSubmit}
+                                onClick={() => handleSubmit()}
                                 disabled={submitting}
                                 className="btn-primary py-4 disabled:opacity-50"
                             >
