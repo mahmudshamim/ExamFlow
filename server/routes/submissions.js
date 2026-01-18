@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Submission = require('../models/submission');
 const Exam = require('../models/exam');
 const Question = require('../models/question');
