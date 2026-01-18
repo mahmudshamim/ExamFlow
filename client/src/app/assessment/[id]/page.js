@@ -382,10 +382,11 @@ export default function AssessmentInterface() {
                 });
             }
         } catch (err) {
-            console.error(err);
+            console.error('SUBMISSION ERROR:', err);
+            const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Something went wrong while submitting. Please try again.';
             Swal.fire({
                 title: 'Submission Failed',
-                text: err.response?.data?.error || 'Something went wrong while submitting. Please try again.',
+                text: errorMsg,
                 icon: 'error',
                 confirmButtonColor: '#1565C0',
             });
