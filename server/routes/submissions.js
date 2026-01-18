@@ -85,12 +85,16 @@ router.post('/', async (req, res) => {
         const userAgent = req.headers['user-agent'];
 
         // 1. Fetch Exam Settings
+        if (!examId || !mongoose.Types.ObjectId.isValid(examId)) {
+            return res.status(400).json({ error: 'Invalid Exam ID' });
+        }
+
         const exam = await Exam.findById(examId);
         if (!exam) return res.status(404).json({ error: 'Exam not found' });
 
         // 2. Check Attempt Restriction (only for new submissions, skip for finalizing draft)
         if (!submissionId && exam.settings.maxAttempts > 0) {
-            const previousSubmissions = await Submission.countDocuments({ examId, candidateEmail, status: { $ne: 'IN_PROGRESS' } });
+            const previousSubmissions = await Submission.countDocuments({ examId, candidateEmail: candidateEmail.toLowerCase(), status: { $ne: 'IN_PROGRESS' } });
             if (previousSubmissions >= exam.settings.maxAttempts) {
                 return res.status(403).json({ error: 'Maximum attempts reached for this assessment.' });
             }
@@ -99,21 +103,26 @@ router.post('/', async (req, res) => {
         // 3. Calculate Score
         const questionsList = await Question.find({ examId });
         let totalScore = 0;
-        let totalPossibleMarks = questionsList.reduce((sum, q) => sum + q.marks, 0);
+        let totalPossibleMarks = 0;
         let finalStatus = 'GRADED';
 
         const gradedAnswers = answers.map(ans => {
             const question = questionsList.find(q => q._id.toString() === ans.questionId);
             if (!question) return ans;
+
+            const qMarks = question.marks || 0;
+            const qNegMarks = question.negativeMarking || 0;
+            totalPossibleMarks += qMarks;
+
             let marksObtained = 0;
             let isGraded = false;
 
             if (question.type === 'MCQ' && question.correctAnswer) {
                 isGraded = true;
                 if (ans.answer === question.correctAnswer) {
-                    marksObtained = question.marks;
-                } else if (exam.settings.negativeMarkingEnabled && ans.answer !== "") {
-                    marksObtained = -question.negativeMarking;
+                    marksObtained = qMarks;
+                } else if (exam.settings.negativeMarkingEnabled && ans.answer && ans.answer !== "") {
+                    marksObtained = -qNegMarks;
                 }
             } else {
                 finalStatus = 'PENDING';
@@ -127,7 +136,15 @@ router.post('/', async (req, res) => {
         // 4. Update or Create Submission
         let submission;
         if (submissionId) {
+            if (!mongoose.Types.ObjectId.isValid(submissionId)) {
+                return res.status(400).json({ error: 'Invalid Submission ID' });
+            }
             submission = await Submission.findById(submissionId);
+            if (!submission) {
+                console.error(`Submision not found for ID: ${submissionId}`);
+                return res.status(404).json({ error: 'Draft submission session not found. Please refresh and try again.' });
+            }
+
             submission.answers = gradedAnswers;
             submission.totalScore = Math.max(0, totalScore);
             submission.status = finalStatus;
@@ -140,7 +157,7 @@ router.post('/', async (req, res) => {
         } else {
             submission = new Submission({
                 examId,
-                candidateEmail,
+                candidateEmail: candidateEmail.toLowerCase(),
                 candidateName,
                 answers: gradedAnswers,
                 totalScore: Math.max(0, totalScore),
@@ -163,9 +180,10 @@ router.post('/', async (req, res) => {
         // 5. Automated Email (Send immediately if toggle is ON)
         if (exam.settings.automatedEmail) {
             console.log(`Sending automated email for ${candidateEmail} (Status: ${finalStatus})`);
+            // We use .then().catch() to avoid blocking the response, but log any issues.
             sendResultEmail(candidateEmail, candidateName, exam.title, submission.totalScore, totalPossibleMarks, questionsList, gradedAnswers)
-                .then(success => console.log(`Post-submission email result: ${success}`))
-                .catch(err => console.error(`Post-submission email crash:`, err));
+                .then(success => console.log(`Post-submission email result for ${candidateEmail}: ${success}`))
+                .catch(err => console.error(`Post-submission email CRASH for ${candidateEmail}:`, err));
         }
 
         res.status(201).json({
@@ -176,8 +194,8 @@ router.post('/', async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+        console.error('SUBMISSION ROUTE ERROR:', err);
+        res.status(500).json({ error: 'An unexpected error occurred while processing your submission', message: err.message });
     }
 });
 
