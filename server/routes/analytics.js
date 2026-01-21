@@ -44,7 +44,25 @@ router.get('/global', auth, authorize('super_admin'), async (req, res) => {
         const failed = passFailStats[0] ? passFailStats[0].failed : 0;
 
         const avgScoreResult = await Submission.aggregate([
-            { $group: { _id: null, avg: { $avg: '$totalScore' } } }
+            {
+                $match: { maxPossibleMarks: { $gt: 0 } }
+            },
+            {
+                $project: {
+                    percentage: {
+                        $multiply: [
+                            { $divide: ["$totalScore", "$maxPossibleMarks"] },
+                            100
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avg: { $avg: "$percentage" }
+                }
+            }
         ]);
         const avgScore = avgScoreResult[0] ? avgScoreResult[0].avg : 0;
 
@@ -67,7 +85,11 @@ router.get('/exam/:id', auth, authorize(['admin', 'super_admin']), async (req, r
         const submissions = await Submission.find({ examId });
 
         const totalAttempts = submissions.length;
-        const scores = submissions.map(s => s.totalScore);
+        const scores = submissions.map(s => {
+            const max = s.maxPossibleMarks || 100; // fallback if data is old
+            return (s.totalScore / max) * 100;
+        });
+
         const avgScore = scores.reduce((a, b) => a + b, 0) / (totalAttempts || 1);
         const maxScore = Math.max(...scores, 0);
         const minScore = Math.min(...scores, 0);

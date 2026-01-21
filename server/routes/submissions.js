@@ -148,6 +148,7 @@ router.post('/', async (req, res) => {
 
             submission.answers = gradedAnswers;
             submission.totalScore = Math.max(0, totalScore);
+            submission.maxPossibleMarks = totalPossibleMarks;
             submission.status = finalStatus;
             submission.submittedAt = new Date();
             submission.metadata.submittedAt = new Date();
@@ -162,6 +163,7 @@ router.post('/', async (req, res) => {
                 candidateName,
                 answers: gradedAnswers,
                 totalScore: Math.max(0, totalScore),
+                maxPossibleMarks: totalPossibleMarks,
                 status: finalStatus,
                 submittedAt: new Date(),
                 metadata: {
@@ -324,8 +326,9 @@ router.patch('/:id/grade', async (req, res) => {
             }
         }
 
-        // Recalculate total score
+        // Recalculate total score and max possible marks
         submission.totalScore = submission.answers.reduce((sum, ans) => sum + (ans.marksObtained || 0), 0);
+        submission.maxPossibleMarks = questions.reduce((sum, q) => sum + (q.marks || 0), 0);
 
         // Check if all questions are now graded
         const allGraded = submission.answers.every(ans => ans.isGraded);

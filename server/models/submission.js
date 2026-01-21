@@ -15,6 +15,7 @@ const submissionSchema = new mongoose.Schema({
         isGraded: { type: Boolean, default: false }
     }],
     totalScore: { type: Number, default: 0 },
+    maxPossibleMarks: { type: Number, default: 0 },
     status: { type: String, enum: ['IN_PROGRESS', 'SUBMITTED', 'GRADED', 'PENDING'], default: 'IN_PROGRESS' },
     metadata: {
         ipAddress: { type: String },
