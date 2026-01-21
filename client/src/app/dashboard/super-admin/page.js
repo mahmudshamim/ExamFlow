@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import API_URL from '@/config';
-import { Users, FileText, CheckCircle, XCircle, TrendingUp, Shield, Mail, Trash2, Calendar, Clock, ChevronRight, Search, Layout, LogOut, Copy } from 'lucide-react';
+import { Users, FileText, CheckCircle, XCircle, TrendingUp, Shield, Mail, Trash2, Calendar, Clock, ChevronRight, Search, Layout, LogOut, Copy, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
 import { getAuthHeaders, handleAuthError, isAuthenticated } from '@/utils/authHelper';
@@ -231,20 +231,21 @@ export default function SuperAdminDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-10">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">System Overview</h1>
                     <p className="text-muted-foreground mt-2">Welcome back to the command center.</p>
                 </div>
-                <a
+                <Link
                     href="/dashboard/super-admin/exams/create"
-                    className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg shadow-primary/20"
+                    className="group relative overflow-hidden bg-gradient-to-r from-primary to-blue-600 text-white px-8 py-3.5 rounded-2xl font-black text-lg flex items-center gap-3 transition-all shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/40 hover:-translate-y-1 active:translate-y-0"
                 >
-                    <div className="bg-white/20 p-1 rounded">
-                        <FileText size={16} />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                    <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition-colors border border-white/10">
+                        <Plus size={22} strokeWidth={3} />
                     </div>
-                    Create New Exam
-                </a>
+                    <span className="tracking-wide">Create New Exam</span>
+                </Link>
             </div>
 
             {/* Primary Stats Grid */}
