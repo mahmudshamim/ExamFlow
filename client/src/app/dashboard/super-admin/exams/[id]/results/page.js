@@ -458,23 +458,23 @@ export default function ExamResultsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <div className="max-w-6xl mx-auto space-y-8">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Link href="/dashboard/super-admin/results" className="p-2 hover:bg-white rounded-lg transition-colors text-slate-500">
                             <ChevronLeft size={24} />
                         </Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">{exam?.title} - Results</h1>
+                            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{exam?.title} - Results</h1>
                             <p className="text-slate-500 text-sm">Total Submissions: {submissions.length}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
                         <button
                             onClick={handleSendBulkResults}
-                            className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-bold text-sm px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-sm"
+                            className="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-bold text-xs md:text-sm px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-sm whitespace-nowrap"
                             title="Send Result Emails to All"
                         >
                             <Mail size={18} className="text-primary" />
@@ -482,7 +482,7 @@ export default function ExamResultsPage() {
                         </button>
                         <button
                             onClick={handleExportCSV}
-                            className="bg-primary hover:opacity-95 text-white font-bold text-sm px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg shadow-primary/20"
+                            className="bg-primary hover:opacity-95 text-white font-bold text-xs md:text-sm px-4 py-2 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg shadow-primary/20 whitespace-nowrap"
                         >
                             <Download size={18} /> Export CSV
                         </button>
@@ -496,17 +496,17 @@ export default function ExamResultsPage() {
                         <input
                             type="text"
                             placeholder="Search by name or email..."
-                            className="flex-1 outline-none text-slate-700 font-medium"
+                            className="flex-1 outline-none text-slate-700 font-medium w-full"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-1">
+                    <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-1 justify-center md:justify-start">
                         <button
                             onClick={() => setFilterType('ALL')}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-xs font-bold transition-all",
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex-1 md:flex-none text-center",
                                 filterType === 'ALL' ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"
                             )}
                         >
@@ -515,7 +515,7 @@ export default function ExamResultsPage() {
                         <button
                             onClick={() => setFilterType('SUSPICIOUS')}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 flex-1 md:flex-none",
                                 filterType === 'SUSPICIOUS' ? "bg-amber-100 text-amber-700 border border-amber-200" : "text-slate-500 hover:bg-slate-50"
                             )}
                         >
@@ -524,7 +524,7 @@ export default function ExamResultsPage() {
                         <button
                             onClick={() => setFilterType('ENDED_BY_POLICY')}
                             className={cn(
-                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                                "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 flex-1 md:flex-none",
                                 filterType === 'ENDED_BY_POLICY' ? "bg-red-100 text-red-700 border border-red-200" : "text-slate-500 hover:bg-slate-50"
                             )}
                         >

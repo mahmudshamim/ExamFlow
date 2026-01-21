@@ -356,8 +356,8 @@ export default function CreateExamPage() {
     return (
         <div className="max-w-4xl mx-auto pb-20">
             {/* Header / Nav */}
-            <div className="flex items-center justify-between sticky top-0 md:static z-20 bg-gray-50/90 backdrop-blur-md py-4 mb-6">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between sticky top-0 md:static z-20 bg-gray-50/90 backdrop-blur-md py-4 mb-6 gap-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
                     <Link href="/dashboard/super-admin" className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600">
                         <ChevronLeft size={24} />
                     </Link>
@@ -366,7 +366,7 @@ export default function CreateExamPage() {
                         <p className="text-xs md:text-sm text-gray-500 hidden md:block">Design your exam questions and settings</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                     {/* Preview Button */}
                     <button
                         onClick={handlePreview}
@@ -460,8 +460,8 @@ export default function CreateExamPage() {
                         />
 
                         {/* Quick Settings Row */}
-                        <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-50">
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-600">
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 border-t border-gray-50">
+                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-600 w-full sm:w-auto">
                                 <Clock size={16} />
                                 <input
                                     type="number"
@@ -474,9 +474,9 @@ export default function CreateExamPage() {
                                 />
                                 mins
                             </div>
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer">
+                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer w-full sm:w-auto">
                                 <Calendar size={16} className="text-primary/60" />
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <span className="font-bold text-[9px] uppercase tracking-wider text-gray-400 leading-none mb-1">Start Time</span>
                                     <DatePicker
                                         selected={examData.startTime}
@@ -486,13 +486,14 @@ export default function CreateExamPage() {
                                         placeholderText="Pick start time"
                                         portalId="root-portal"
                                         popperPlacement="bottom-start"
-                                        className="bg-transparent outline-none font-bold text-gray-900 text-xs w-[150px]"
+                                        className="bg-transparent outline-none font-bold text-gray-900 text-xs w-full"
+                                        wrapperClassName="w-full"
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer">
+                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer w-full sm:w-auto">
                                 <Calendar size={16} className="text-primary/60" />
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-full">
                                     <span className="font-bold text-[9px] uppercase tracking-wider text-gray-400 leading-none mb-1">End Time</span>
                                     <DatePicker
                                         selected={examData.endTime}
@@ -502,7 +503,8 @@ export default function CreateExamPage() {
                                         placeholderText="Pick end time"
                                         portalId="root-portal"
                                         popperPlacement="bottom-start"
-                                        className="bg-transparent outline-none font-bold text-gray-900 text-xs w-[150px]"
+                                        className="bg-transparent outline-none font-bold text-gray-900 text-xs w-full"
+                                        wrapperClassName="w-full"
                                     />
                                 </div>
                             </div>
@@ -727,7 +729,7 @@ export default function CreateExamPage() {
                             )}
 
                             {q.type === 'SHORT_ANSWER' && (
-                                <div className="text-sm text-gray-400 italic px-4 py-3 border-b border-gray-200 w-2/3">
+                                <div className="text-sm text-gray-400 italic px-4 py-3 border-b border-gray-200 w-full md:w-2/3">
                                     Short answer text will be entered here...
                                 </div>
                             )}
