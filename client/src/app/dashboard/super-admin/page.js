@@ -238,7 +238,7 @@ export default function SuperAdminDashboard() {
                 </div>
                 <Link
                     href="/dashboard/super-admin/exams/create"
-                    className="group relative overflow-hidden bg-gradient-to-r from-primary to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0"
+                    className="group relative overflow-hidden bg-gradient-to-r from-primary to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0 ring-2 ring-primary ring-offset-2 ring-offset-slate-50"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
                     <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm group-hover:bg-white/30 transition-colors border border-white/10">
