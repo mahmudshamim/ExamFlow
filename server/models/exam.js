@@ -8,6 +8,7 @@ const examSchema = new mongoose.Schema({
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     duration: { type: Number, required: true }, // duration in minutes
+    passingMarks: { type: Number, default: 40 },
     status: { type: String, enum: ['DRAFT', 'SCHEDULED', 'RUNNING', 'CLOSED'], default: 'DRAFT' },
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],
     settings: {

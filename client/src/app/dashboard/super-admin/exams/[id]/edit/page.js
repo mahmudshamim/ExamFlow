@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter, useParams } from 'next/navigation';
 import API_URL from '@/config';
-import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, Save, Loader2, Clock, Calendar, Settings, GripVertical, X, FileText, Copy, Image as ImageIcon, Upload, Eye, Link as LinkIcon, ShieldCheck, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -31,6 +31,7 @@ export default function EditExamPage() {
         duration: 60,
         startTime: null,
         endTime: null,
+        passingMarks: 40,
         settings: {
             negativeMarkingEnabled: false,
             automatedEmail: true,
@@ -65,6 +66,7 @@ export default function EditExamPage() {
                     duration: exam.duration || 60,
                     startTime: exam.startTime ? new Date(exam.startTime) : null,
                     endTime: exam.endTime ? new Date(exam.endTime) : null,
+                    passingMarks: exam.passingMarks || 40,
                     settings: exam.settings || {
                         negativeMarkingEnabled: false,
                         automatedEmail: true,
@@ -473,6 +475,20 @@ export default function EditExamPage() {
                                     className="w-12 bg-transparent outline-none font-bold text-gray-900 text-center border-b border-gray-300 focus:border-primary"
                                 />
                                 mins
+                            </div>
+                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-600 w-full sm:w-auto">
+                                <CheckCircle size={16} />
+                                <input
+                                    type="number"
+                                    value={isNaN(examData.passingMarks) ? '' : examData.passingMarks}
+                                    onChange={e => {
+                                        const val = parseInt(e.target.value);
+                                        setExamData({ ...examData, passingMarks: isNaN(val) ? 0 : val });
+                                    }}
+                                    className="w-12 bg-transparent outline-none font-bold text-gray-900 text-center border-b border-gray-300 focus:border-primary"
+                                    placeholder="40"
+                                />
+                                <span className="text-xs">Pass Marks</span>
                             </div>
                             <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer w-full sm:w-auto">
                                 <Calendar size={16} className="text-primary/60" />
