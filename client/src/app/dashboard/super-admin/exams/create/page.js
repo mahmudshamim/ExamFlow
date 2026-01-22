@@ -41,7 +41,7 @@ export default function CreateExamPage() {
 
     // Questions State
     const [questions, setQuestions] = useState([
-        { id: 1, type: 'MCQ', text: 'Question 1', options: ['Option 1'], correctAnswer: 'Option 1', marks: 1, required: false }
+        { id: 1, type: 'MCQ', text: 'Question 1', options: ['Option 1'], correctAnswer: 'Option 1', marks: 1, negativeMarking: 0, required: false }
     ]);
 
     // Helper: Add new question
@@ -53,6 +53,7 @@ export default function CreateExamPage() {
             options: type === 'MCQ' ? ['Option 1'] : [],
             correctAnswer: '',
             marks: 1,
+            negativeMarking: 0,
             required: false // Default to not required
         };
         setQuestions([...questions, newQ]);
@@ -774,10 +775,26 @@ export default function CreateExamPage() {
                                         <input
                                             type="number"
                                             value={q.marks}
-                                            onChange={e => updateQuestion(q.id, 'marks', parseInt(e.target.value) || 0)}
+                                            onChange={e => updateQuestion(q.id, 'marks', parseFloat(e.target.value) || 0)}
+                                            step="0.25"
                                             className="w-12 p-1 text-center border-b border-gray-200 focus:border-primary outline-none font-bold text-gray-900"
                                         />
                                     </div>
+
+                                    {examData.settings.negativeMarkingEnabled && q.type === 'MCQ' && (
+                                        <div className="flex items-center gap-2 text-sm text-gray-500 border-r border-gray-200 pr-4 mr-1 animate-in slide-in-from-right-2">
+                                            <span>Penalty:</span>
+                                            <input
+                                                type="number"
+                                                value={q.negativeMarking || 0}
+                                                onChange={e => updateQuestion(q.id, 'negativeMarking', parseFloat(e.target.value) || 0)}
+                                                step="0.25"
+                                                min="0"
+                                                className="w-12 p-1 text-center border-b border-orange-200 focus:border-orange-500 outline-none font-bold text-orange-600"
+                                                title="Points deducted for wrong answer"
+                                            />
+                                        </div>
+                                    )}
                                     <button
                                         onClick={() => duplicateQuestion(q.id)}
                                         className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
