@@ -552,6 +552,9 @@ export default function AssessmentInterface() {
                                 <RuleItem icon={<AlertTriangle size={14} />} label="Neg. Marking" value={assessment.settings?.negativeMarkingEnabled ? "Enabled" : "Disabled"} />
                                 <RuleItem icon={<Send size={14} />} label="Attempts" value={`Max ${assessment.settings?.maxAttempts}`} />
                                 <RuleItem icon={<Info size={14} />} label="Questions" value={`${questions.length} Items`} />
+                                {assessment.settings?.enablePassFail && (
+                                    <RuleItem icon={<ShieldCheck size={14} />} label="Pass Marks" value={`${assessment.passingMarks}`} />
+                                )}
                             </div>
                         </div>
 

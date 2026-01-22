@@ -39,7 +39,8 @@ export default function EditExamPage() {
             tabSwitchLimit: 0,
             enableAntiCheat: false,
             requireFullscreen: false,
-            antiCheatMode: 'STRICT'
+            antiCheatMode: 'STRICT',
+            enablePassFail: true
         }
     });
 
@@ -74,7 +75,8 @@ export default function EditExamPage() {
                         tabSwitchLimit: 0,
                         enableAntiCheat: false,
                         requireFullscreen: false,
-                        antiCheatMode: 'STRICT'
+                        antiCheatMode: 'STRICT',
+                        enablePassFail: exam.settings?.enablePassFail !== undefined ? exam.settings.enablePassFail : true
                     }
                 });
 
@@ -478,19 +480,43 @@ export default function EditExamPage() {
                                 />
                                 mins
                             </div>
+                            {examData.settings?.enablePassFail && (
+                                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-600 w-full sm:w-auto animate-in fade-in zoom-in duration-300">
+                                    <CheckCircle size={16} />
+                                    <input
+                                        type="number"
+                                        value={isNaN(examData.passingMarks) ? '' : examData.passingMarks}
+                                        onChange={e => {
+                                            const val = parseInt(e.target.value);
+                                            setExamData({ ...examData, passingMarks: isNaN(val) ? 0 : val });
+                                        }}
+                                        className="w-12 bg-transparent outline-none font-bold text-gray-900 text-center border-b border-gray-300 focus:border-primary"
+                                        placeholder="40"
+                                    />
+                                    <span className="text-xs">Pass Marks</span>
+                                </div>
+                            )}
+
                             <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg text-sm text-gray-600 w-full sm:w-auto">
-                                <CheckCircle size={16} />
-                                <input
-                                    type="number"
-                                    value={isNaN(examData.passingMarks) ? '' : examData.passingMarks}
-                                    onChange={e => {
-                                        const val = parseInt(e.target.value);
-                                        setExamData({ ...examData, passingMarks: isNaN(val) ? 0 : val });
-                                    }}
-                                    className="w-12 bg-transparent outline-none font-bold text-gray-900 text-center border-b border-gray-300 focus:border-primary"
-                                    placeholder="40"
-                                />
-                                <span className="text-xs">Pass Marks</span>
+                                <ShieldCheck size={16} className={examData.settings?.enablePassFail ? "text-primary" : "text-gray-400"} />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium">Pass/Fail</span>
+                                    <label className="flex items-center cursor-pointer gap-2">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only"
+                                                checked={examData.settings?.enablePassFail}
+                                                onChange={e => setExamData({
+                                                    ...examData,
+                                                    settings: { ...examData.settings, enablePassFail: e.target.checked }
+                                                })}
+                                            />
+                                            <div className={`block w-8 h-4 rounded-full transition-colors ${examData.settings?.enablePassFail ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                                            <div className={`dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${examData.settings?.enablePassFail ? 'transform translate-x-4' : ''}`}></div>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                             <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-600 border border-gray-100 focus-within:border-primary/30 transition-all hover:bg-gray-100/80 cursor-pointer w-full sm:w-auto">
                                 <Calendar size={16} className="text-primary/60" />
@@ -816,6 +842,6 @@ export default function EditExamPage() {
                     <Plus size={24} />
                 </button>
             </div>
-        </div>
+        </div >
     );
 }

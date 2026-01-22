@@ -341,7 +341,7 @@ export default function ExamResultsPage() {
             let status = 'Graded';
             if (sub.status === 'PENDING') {
                 status = 'Pending Review';
-            } else if (sub.totalScore >= (exam?.passingMarks || 0)) {
+            } else if (exam?.settings?.enablePassFail && sub.totalScore >= (exam?.passingMarks || 0)) {
                 status = 'Passed';
             }
             const date = new Date(sub.submittedAt).toLocaleString().replace(/,/g, '');
@@ -577,12 +577,12 @@ export default function ExamResultsPage() {
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 italic whitespace-nowrap">
                                                     Pending Review
                                                 </span>
-                                            ) : sub.totalScore >= (exam?.passingMarks || 0) ? (
+                                            ) : (exam?.settings?.enablePassFail && sub.totalScore >= (exam?.passingMarks || 0)) ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 whitespace-nowrap">
                                                     <CheckCircle size={12} /> Passed
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 whitespace-nowrap">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 whitespace-nowrap">
                                                     <CheckCircle size={12} /> Graded
                                                 </span>
                                             )}

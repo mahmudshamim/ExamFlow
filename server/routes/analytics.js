@@ -25,6 +25,9 @@ router.get('/global', auth, authorize('super_admin'), async (req, res) => {
             },
             { $unwind: '$exam' },
             {
+                $match: { 'exam.settings.enablePassFail': true }
+            },
+            {
                 $project: {
                     totalScore: 1,
                     passingMarks: '$exam.passingMarks',
