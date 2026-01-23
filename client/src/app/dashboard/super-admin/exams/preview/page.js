@@ -37,7 +37,7 @@ export default function ExamPreviewPage() {
 
     if (!assessment) return <div className="p-10 text-center">Loading Preview...</div>;
 
-    const currentQuestion = questions[currentQ];
+
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
