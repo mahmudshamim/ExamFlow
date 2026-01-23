@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Clock, ChevronLeft, ChevronRight, Send, AlertTriangle, ShieldCheck, Mail, Info, X } from "lucide-react";
+import { Clock, Send, ShieldCheck, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -8,7 +8,7 @@ export default function ExamPreviewPage() {
     const router = useRouter();
     const [assessment, setAssessment] = useState(null);
     const [questions, setQuestions] = useState([]);
-    const [currentQ, setCurrentQ] = useState(0);
+
 
     // For preview, we don't need real timer/submission logic, just the UI
     const [answers, setAnswers] = useState({});
@@ -70,72 +70,96 @@ export default function ExamPreviewPage() {
             </nav>
 
             <div className="flex-1 flex overflow-hidden">
-                <main className="flex-1 overflow-y-auto p-12">
-                    <div className="max-w-3xl mx-auto space-y-12">
-                        {/* Cover Image Preview */}
-                        {assessment.coverImage && (
-                            <div className="rounded-3xl overflow-hidden h-48 w-full shadow-sm mb-6">
-                                <img src={assessment.coverImage} className="w-full h-full object-cover" alt="Cover" />
-                            </div>
-                        )}
-
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-end">
-                                <span className="text-sm font-black text-primary uppercase tracking-widest">Question {currentQ + 1} of {questions.length}</span>
-                                <div className="flex gap-2">
-                                    <span className="text-xs font-bold px-3 py-1 bg-slate-100 rounded-full text-slate-500">{currentQuestion?.marks} Marks</span>
+                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                    <div className="max-w-3xl mx-auto space-y-4">
+                        {/* Header Card (Matching Assessment UI) */}
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            {assessment.coverImage && (
+                                <div className="w-full h-32 md:h-64 border-b border-slate-100">
+                                    <img src={assessment.coverImage} alt="Cover" className="w-full h-full object-cover" />
                                 </div>
-                            </div>
-                            <h2 className="text-3xl font-bold leading-tight text-slate-800">{currentQuestion?.text}</h2>
-                        </div>
-
-                        <div className="pt-8">
-                            {currentQuestion?.type === "MCQ" ? (
-                                <div className="grid grid-cols-1 gap-4">
-                                    {currentQuestion.options.map((opt, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleAnswer(currentQuestion.id, opt)}
-                                            className={cn(
-                                                "p-6 rounded-2xl border-2 text-left transition-all flex items-center gap-4",
-                                                answers[currentQuestion.id] === opt ? "border-primary bg-primary/5" : "border-border bg-white hover:border-primary/30"
-                                            )}
-                                        >
-                                            <div className={cn("w-5 h-5 rounded-full border-2", answers[currentQuestion.id] === opt ? "border-primary bg-primary" : "border-slate-300")} />
-                                            <span className="text-lg font-medium">{opt}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : currentQuestion?.type === "SHORT_ANSWER" ? (
-                                <textarea
-                                    className="w-full glass p-8 rounded-3xl border border-border focus:ring-4 focus:ring-primary/10 outline-none min-h-[200px] text-lg"
-                                    placeholder="Type your explanation..."
-                                    value={answers[currentQuestion?.id] || ""}
-                                    onChange={(e) => handleAnswer(currentQuestion.id, e.target.value)}
-                                />
-                            ) : (
-                                <div className="p-10 text-center text-gray-400">Question content placeholder</div>
                             )}
+
+                            <div className="p-5 md:p-8 space-y-3 md:space-y-4">
+                                <h2 className="text-xl md:text-3xl font-bold text-slate-800">{assessment.title || "Untitled Exam"}</h2>
+                                <p className="text-sm md:text-base text-slate-600 font-medium">{assessment.description}</p>
+                                <div className="pt-3 md:pt-4 border-t border-slate-100 flex flex-wrap items-center gap-y-2 gap-x-4 md:gap-x-6 text-slate-500">
+                                    <div className="flex items-center gap-1.5 font-bold text-[11px] md:text-xs">
+                                        <Info size={13} className="text-slate-400" /> {questions.length} Questions
+                                    </div>
+                                    <div className="w-1 h-1 bg-slate-200 rounded-full hidden sm:block" />
+                                    <div className="flex items-center gap-1.5 font-bold text-[11px] md:text-xs">
+                                        <Clock size={13} className="text-slate-400" /> {assessment.duration || 60} Mins
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex justify-between pt-12">
-                            <button
-                                disabled={currentQ === 0}
-                                onClick={() => setCurrentQ(currentQ - 1)}
-                                className="flex items-center gap-2 px-8 py-4 font-bold text-slate-400 disabled:opacity-30"
-                            >
-                                <ChevronLeft /> Previous
+                        {/* Questions List */}
+                        <div className="space-y-4 pb-6">
+                            {questions.map((q, idx) => (
+                                <div key={idx} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8 space-y-4 md:space-y-6">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="space-y-2 md:space-y-3">
+                                            <span className="text-[10px] md:text-xs font-black text-primary uppercase tracking-widest">Question {idx + 1}</span>
+                                            <h2 className="text-[16px] md:text-xl font-medium leading-tight text-slate-800">{q.text}</h2>
+                                        </div>
+                                        <div className="shrink-0 flex gap-2">
+                                            <span className="text-[9px] font-black px-2 py-0.5 bg-slate-50 text-slate-500 rounded-md border border-slate-100 uppercase whitespace-nowrap">
+                                                {q.marks} Marks
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-1 md:pt-2">
+                                        {q.type === "MCQ" ? (
+                                            <div className="space-y-2 md:space-y-3">
+                                                {q.options.map((opt, optIdx) => (
+                                                    <label
+                                                        key={optIdx}
+                                                        className={cn(
+                                                            "w-full p-3 md:p-4 rounded-xl border border-transparent transition-all flex items-center gap-3 md:gap-4 cursor-pointer hover:bg-slate-50",
+                                                            answers[q.id || idx] === opt && "bg-blue-50/50 border-blue-100"
+                                                        )}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name={`question-${idx}`}
+                                                            checked={answers[q.id || idx] === opt}
+                                                            onChange={() => handleAnswer(q.id || idx, opt)}
+                                                            className="w-4 h-4 md:w-5 md:h-5 accent-primary cursor-pointer shrink-0"
+                                                        />
+                                                        <span className="text-[14px] md:text-base text-slate-700 font-medium leading-tight">{opt}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        ) : q.type === "SHORT_ANSWER" ? (
+                                            <textarea
+                                                className="w-full bg-transparent border-b border-slate-200 outline-none py-2 text-sm md:text-lg transition-all min-h-[80px] md:min-h-[100px] focus:border-primary focus:border-b-2"
+                                                placeholder="Your answer"
+                                                value={answers[q.id || idx] || ""}
+                                                onChange={(e) => handleAnswer(q.id || idx, e.target.value)}
+                                            />
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                className="w-full bg-transparent border-b border-slate-200 outline-none py-2 text-sm md:text-lg transition-all focus:border-primary focus:border-b-2"
+                                                placeholder="Short answer text"
+                                                value={answers[q.id || idx] || ""}
+                                                onChange={(e) => handleAnswer(q.id || idx, e.target.value)}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Submit Button Placeholder */}
+                        <div className="flex flex-col items-center pt-4 pb-12">
+                            <button className="btn-primary bg-primary px-12 py-3 text-lg shadow-md opacity-50 cursor-not-allowed">
+                                Submit
                             </button>
-                            {currentQ < questions.length - 1 ? (
-                                <button
-                                    onClick={() => setCurrentQ(currentQ + 1)}
-                                    className="btn-primary px-10 py-4 flex items-center gap-2"
-                                >
-                                    Next <ChevronRight />
-                                </button>
-                            ) : (
-                                <div className="opacity-50">End of Preview</div>
-                            )}
+                            <p className="text-slate-400 text-xs mt-4 italic">This is a preview. Results will not be recorded.</p>
                         </div>
                     </div>
                 </main>
