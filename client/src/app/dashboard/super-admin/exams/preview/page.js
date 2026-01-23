@@ -64,9 +64,7 @@ export default function ExamPreviewPage() {
                     {assessment.duration || 60}:00
                 </div>
 
-                <div className="btn-primary px-8 py-3 flex items-center gap-2 opacity-50 cursor-not-allowed">
-                    Submit <Send size={18} />
-                </div>
+
             </nav>
 
             <div className="flex-1 flex overflow-hidden">
