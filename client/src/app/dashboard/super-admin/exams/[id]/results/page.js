@@ -538,7 +538,7 @@ export default function ExamResultsPage() {
                     <table className="w-full text-left text-sm min-w-[800px] md:min-w-full">
                         <thead className="bg-slate-50 text-slate-500 border-b border-slate-100">
                             <tr>
-                                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Rank</th>
+                                <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">No.</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Candidate</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Score</th>
                                 <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Status</th>
@@ -557,7 +557,7 @@ export default function ExamResultsPage() {
                             ) : (
                                 filteredSubmissions.map((sub, index) => (
                                     <tr key={sub._id} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="px-6 py-4 font-bold text-slate-400">#{index + 1}</td>
+                                        <td className="px-6 py-4 font-bold text-slate-400">{index + 1}</td>
                                         <td className="px-6 py-4">
                                             <div className="min-w-[150px]">
                                                 <p className="font-bold text-slate-800">{sub.candidateName}</p>
