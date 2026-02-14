@@ -55,7 +55,14 @@ export default function ExamResultsPage() {
 
     const handleViewDetails = (submission) => {
         const detailsHtml = questions.map((q, idx) => {
-            const candidateAnswer = submission.answers.find(a => a.questionId.toString() === q._id.toString());
+            // Priority 1: Match by ID (Modern/Fixed data)
+            let candidateAnswer = submission.answers.find(a => a.questionId.toString() === q._id.toString());
+
+            // Priority 2: Match by Index (Historical data where IDs were lost/changed)
+            if (!candidateAnswer && submission.answers[idx]) {
+                candidateAnswer = submission.answers[idx];
+            }
+
             const marks = candidateAnswer?.marksObtained;
             const isGraded = candidateAnswer?.isGraded;
             const isCorrect = isGraded && marks > 0;
@@ -87,6 +94,7 @@ export default function ExamResultsPage() {
                                 type="number" 
                                 class="manual-mark-input w-24 px-3 py-1.5 border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-primary"
                                 data-q-id="${q._id}"
+                                data-q-index="${idx}"
                                 max="${q.marks}"
                                 placeholder="Marks"
                                 value="${isGraded ? marks : ''}"
@@ -189,6 +197,7 @@ export default function ExamResultsPage() {
 
                     updates.push({
                         questionId: input.dataset.qId,
+                        index: parseInt(input.dataset.qIndex),
                         marksObtained: val
                     });
                 });
@@ -346,9 +355,15 @@ export default function ExamResultsPage() {
             }
             const date = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString().replace(/,/g, '') : 'N/A';
 
-            const questionMarks = questions.map(q => {
-                // Ensure ID comparison works by converting to string
-                const ans = sub.answers.find(a => a.questionId.toString() === q._id.toString());
+            const questionMarks = questions.map((q, idx) => {
+                // Priority 1: Match by ID (Modern/Fixed data)
+                let ans = sub.answers.find(a => a.questionId.toString() === q._id.toString());
+
+                // Priority 2: Match by Index (Historical data where IDs were lost/changed)
+                if (!ans && sub.answers[idx]) {
+                    ans = sub.answers[idx];
+                }
+
                 if (ans && !ans.isGraded) return 'Pending';
                 return ans?.marksObtained ?? 0;
             }).join(',');

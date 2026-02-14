@@ -308,18 +308,14 @@ router.patch('/:id/grade', async (req, res) => {
 
         // Update specific answers with validation
         for (const update of gradedAnswers) {
-            const question = questions.find(q => q._id.toString() === update.questionId);
-            if (!question) continue;
+            // Priority 1: Match by ID
+            let answerIndex = submission.answers.findIndex(ans => ans.questionId?.toString() === update.questionId);
 
-            if (update.marksObtained > question.marks) {
-                return res.status(400).json({
-                    error: `Question "${question.text.substring(0, 30)}..." cannot have more than ${question.marks} marks. You provided ${update.marksObtained}.`
-                });
+            // Priority 2: Fallback to index (for historical data mismatch)
+            if (answerIndex === -1 && typeof update.index === 'number' && submission.answers[update.index]) {
+                answerIndex = update.index;
             }
-            // Removed negative marks restriction to allow penalty marks
 
-
-            const answerIndex = submission.answers.findIndex(ans => ans.questionId.toString() === update.questionId);
             if (answerIndex !== -1) {
                 submission.answers[answerIndex].marksObtained = update.marksObtained;
                 submission.answers[answerIndex].isGraded = true;
@@ -338,9 +334,6 @@ router.patch('/:id/grade', async (req, res) => {
 
         submission.markModified('answers');
         await submission.save();
-
-        // Automated email removed from manual grading route. 
-        // Admin will now send results manually from the dashboard.
 
         res.json({ message: 'Grading updated successfully', submission });
     } catch (err) {
