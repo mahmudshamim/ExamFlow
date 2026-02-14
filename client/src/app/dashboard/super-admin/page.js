@@ -12,7 +12,6 @@ export default function SuperAdminDashboard() {
         totalExams: 0,
         totalCandidates: 0,
         totalAdmins: 0,
-        passFail: { passed: 0, failed: 0 },
         avgScore: 0
     });
     const [loading, setLoading] = useState(true);
@@ -262,18 +261,11 @@ export default function SuperAdminDashboard() {
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-border shadow-sm">
                     <h2 className="text-lg font-bold mb-6">Performance Metrics</h2>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-8">
-                        <div className="flex-1 p-4 rounded-xl bg-green-50 border border-green-100 flex items-center gap-4 transition-all hover:bg-green-100/50">
-                            <div className="p-3 bg-green-100 rounded-lg text-green-600"><CheckCircle size={24} /></div>
+                        <div className="flex-1 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-4 transition-all hover:bg-blue-100/50">
+                            <div className="p-3 bg-blue-100 rounded-lg text-blue-600"><CheckCircle size={24} /></div>
                             <div>
-                                <p className="text-sm text-gray-500 font-medium">Passed Candidates</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.passFail.passed}</p>
-                            </div>
-                        </div>
-                        <div className="flex-1 p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-4 transition-all hover:bg-red-100/50">
-                            <div className="p-3 bg-red-100 rounded-lg text-red-600"><XCircle size={24} /></div>
-                            <div>
-                                <p className="text-sm text-gray-500 font-medium">Failed Candidates</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.passFail.failed}</p>
+                                <p className="text-sm text-gray-500 font-medium">Average Performance</p>
+                                <p className="text-2xl font-bold text-gray-900">{Math.round(stats.avgScore)}%</p>
                             </div>
                         </div>
                     </div>

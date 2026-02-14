@@ -8,7 +8,6 @@ const examSchema = new mongoose.Schema({
     startTime: { type: Date, required: true },
     endTime: { type: Date, required: true },
     duration: { type: Number, required: true }, // duration in minutes
-    passingMarks: { type: Number, default: 40 },
     status: { type: String, enum: ['DRAFT', 'SCHEDULED', 'RUNNING', 'CLOSED'], default: 'DRAFT' },
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],
     settings: {
@@ -21,8 +20,7 @@ const examSchema = new mongoose.Schema({
         enableAntiCheat: { type: Boolean, default: false },
         actionOnLimit: { type: String, enum: ['AUTO_SUBMIT', 'NOTIFY_ONLY'], default: 'AUTO_SUBMIT' },
         requireFullscreen: { type: Boolean, default: false },
-        antiCheatMode: { type: String, enum: ['STRICT', 'SILENT'], default: 'STRICT' },
-        enablePassFail: { type: Boolean, default: true }
+        antiCheatMode: { type: String, enum: ['STRICT', 'SILENT'], default: 'STRICT' }
     },
     createdAt: { type: Date, default: Date.now }
 });

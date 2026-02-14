@@ -13,39 +13,6 @@ router.get('/global', auth, authorize('super_admin'), async (req, res) => {
         const totalCandidates = uniqueCandidates.length;
         const totalAdmins = await User.countDocuments({ role: 'admin' });
 
-        // Pass/Fail ratio (Dynamic calculation based on each exam's passing marks)
-        const passFailStats = await Submission.aggregate([
-            {
-                $lookup: {
-                    from: 'exams',
-                    localField: 'examId',
-                    foreignField: '_id',
-                    as: 'exam'
-                }
-            },
-            { $unwind: '$exam' },
-            {
-                $match: { 'exam.settings.enablePassFail': true }
-            },
-            {
-                $project: {
-                    totalScore: 1,
-                    passingMarks: '$exam.passingMarks',
-                    passed: { $gte: ['$totalScore', '$exam.passingMarks'] }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    passed: { $sum: { $cond: ['$passed', 1, 0] } },
-                    failed: { $sum: { $cond: ['$passed', 0, 1] } }
-                }
-            }
-        ]);
-
-        const passed = passFailStats[0] ? passFailStats[0].passed : 0;
-        const failed = passFailStats[0] ? passFailStats[0].failed : 0;
-
         const avgScoreResult = await Submission.aggregate([
             {
                 $match: { maxPossibleMarks: { $gt: 0 } }
@@ -73,7 +40,6 @@ router.get('/global', auth, authorize('super_admin'), async (req, res) => {
             totalExams,
             totalCandidates,
             totalAdmins,
-            passFail: { passed, failed },
             avgScore
         });
     } catch (err) {

@@ -202,6 +202,13 @@ export default function AssessmentInterface() {
         return () => clearInterval(timer);
     }, [hasStarted, timeLeft]);
 
+    // Auto-submit when time is up
+    useEffect(() => {
+        if (hasStarted && timeLeft === 0 && !submitted && !submitting) {
+            handleSubmit(true, switchCount, false, true);
+        }
+    }, [timeLeft, hasStarted, submitted, submitting]);
+
     // Check attempts in real-time
     useEffect(() => {
         const checkAttempts = async () => {
@@ -341,7 +348,7 @@ export default function AssessmentInterface() {
         setShowConfirm(true);
     };
 
-    const handleSubmit = async (isAuto = false, currentSwitchCount = switchCount, endedByPolicy = false) => {
+    const handleSubmit = async (isAuto = false, currentSwitchCount = switchCount, endedByPolicy = false, isTimeUp = false) => {
         setSubmitting(true);
         if (autosaveTimer.current) clearInterval(autosaveTimer.current);
 
@@ -372,10 +379,24 @@ export default function AssessmentInterface() {
                     document.exitFullscreen().catch(err => console.error(err));
                 }
 
+                let title = 'Submitted!';
+                let text = 'Your assessment has been recorded.';
+                let icon = 'success';
+
+                if (endedByPolicy) {
+                    title = 'Exam Terminated';
+                    text = 'The exam was automatically submitted due to policy violations.';
+                    icon = 'warning';
+                } else if (isTimeUp) {
+                    title = 'Time Expired';
+                    text = 'Your assessment has been automatically submitted as the time limit was reached.';
+                    icon = 'info';
+                }
+
                 Swal.fire({
-                    title: isAuto ? 'Exam Terminated' : 'Submitted!',
-                    text: isAuto ? 'The exam was automatically submitted due to policy violations.' : 'Your assessment has been recorded.',
-                    icon: isAuto ? 'warning' : 'success',
+                    title,
+                    text,
+                    icon,
                     timer: 3000,
                     showConfirmButton: false,
                     confirmButtonColor: '#1565C0',
@@ -552,9 +573,6 @@ export default function AssessmentInterface() {
                                 <RuleItem icon={<AlertTriangle size={14} />} label="Neg. Marking" value={assessment.settings?.negativeMarkingEnabled ? "Enabled" : "Disabled"} />
                                 <RuleItem icon={<Send size={14} />} label="Attempts" value={`Max ${assessment.settings?.maxAttempts}`} />
                                 <RuleItem icon={<Info size={14} />} label="Questions" value={`${questions.length} Items`} />
-                                {assessment.settings?.enablePassFail && (
-                                    <RuleItem icon={<ShieldCheck size={14} />} label="Pass Marks" value={`${assessment.passingMarks}`} />
-                                )}
                             </div>
                         </div>
 

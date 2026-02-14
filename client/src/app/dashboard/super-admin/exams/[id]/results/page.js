@@ -333,7 +333,7 @@ export default function ExamResultsPage() {
         if (!submissions.length || !questions.length) return;
 
         // 1. Prepare Headers
-        const questionHeaders = questions.map(q => `"${q.text.replace(/"/g, '""')}"`).join(',');
+        const questionHeaders = questions.map(q => `"${q.text.replace(/"/g, '""')} (Max ${q.marks})"`).join(',');
         const headers = `Rank,Candidate Name,Candidate Email,Total Score,Status,Submitted At,${questionHeaders}`;
 
         // 2. Prepare Rows
@@ -341,15 +341,16 @@ export default function ExamResultsPage() {
             let status = 'Graded';
             if (sub.status === 'PENDING') {
                 status = 'Pending Review';
-            } else if (exam?.settings?.enablePassFail && sub.totalScore >= (exam?.passingMarks || 0)) {
-                status = 'Passed';
+            } else {
+                status = 'Graded';
             }
-            const date = new Date(sub.submittedAt).toLocaleString().replace(/,/g, '');
+            const date = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString().replace(/,/g, '') : 'N/A';
 
             const questionMarks = questions.map(q => {
-                const ans = sub.answers.find(a => a.questionId === q._id);
+                // Ensure ID comparison works by converting to string
+                const ans = sub.answers.find(a => a.questionId.toString() === q._id.toString());
                 if (ans && !ans.isGraded) return 'Pending';
-                return ans?.marksObtained || 0;
+                return ans?.marksObtained ?? 0;
             }).join(',');
 
             return `${index + 1},"${sub.candidateName}","${sub.candidateEmail}",${sub.status === 'PENDING' ? 'Pending' : sub.totalScore},${status},"${date}",${questionMarks}`;
@@ -573,19 +574,12 @@ export default function ExamResultsPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-xs font-bold">
-                                            {sub.status === 'PENDING' ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 italic whitespace-nowrap">
-                                                    Pending Review
-                                                </span>
-                                            ) : (exam?.settings?.enablePassFail && sub.totalScore >= (exam?.passingMarks || 0)) ? (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-100 text-green-700 whitespace-nowrap">
-                                                    <CheckCircle size={12} /> Passed
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 whitespace-nowrap">
-                                                    <CheckCircle size={12} /> Graded
-                                                </span>
-                                            )}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sub.status === 'PENDING'
+                                                ? 'bg-amber-100 text-amber-800'
+                                                : 'bg-green-100 text-green-800'
+                                                }`}>
+                                                {sub.status === 'PENDING' ? 'Pending Review' : 'Graded'}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             {sub.metadata?.tabSwitchCount > 0 ? (
