@@ -159,9 +159,9 @@ export default function AssessmentInterface() {
 
         autosaveTimer.current = setInterval(async () => {
             try {
-                const answersPayload = Object.keys(answers).map(qId => ({
-                    questionId: qId,
-                    answer: answers[qId]
+                const answersPayload = questions.map(q => ({
+                    questionId: q._id,
+                    answer: answers[q._id] || ""
                 }));
                 await axios.patch(`${API_URL}/submissions/${submissionId}/autosave`, { answers: answersPayload });
                 console.log("Progress autosaved");
@@ -365,9 +365,9 @@ export default function AssessmentInterface() {
                 examId: id,
                 candidateEmail: candidateInfo.email,
                 candidateName: candidateInfo.name,
-                answers: Object.keys(answers).map(qId => ({
-                    questionId: qId,
-                    answer: answers[qId]
+                answers: questions.map(q => ({
+                    questionId: q._id,
+                    answer: answers[q._id] || ""
                 })),
                 tabSwitchCount: currentSwitchCount,
                 isFlagged: isAuto || currentSwitchCount > 0,

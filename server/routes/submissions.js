@@ -69,7 +69,18 @@ router.patch('/:id/autosave', async (req, res) => {
         const submission = await Submission.findById(req.params.id);
         if (!submission) return res.status(404).json({ error: 'Submission not found' });
 
-        submission.answers = answers;
+        const questions = await Question.find({ examId: submission.examId });
+
+        // Heal IDs and ensure order if necessary
+        const healedAnswers = answers.map((ans, idx) => {
+            const questionExists = questions.find(q => q._id.toString() === ans.questionId);
+            if (!questionExists && questions[idx]) {
+                return { ...ans, questionId: questions[idx]._id };
+            }
+            return ans;
+        });
+
+        submission.answers = healedAnswers;
         submission.markModified('answers');
         await submission.save();
         res.json({ success: true });
@@ -107,8 +118,15 @@ router.post('/', async (req, res) => {
         let totalPossibleMarks = 0;
         let finalStatus = 'GRADED';
 
-        const gradedAnswers = answers.map(ans => {
-            const question = questionsList.find(q => q._id.toString() === ans.questionId);
+        const gradedAnswers = answers.map((ans, idx) => {
+            let question = questionsList.find(q => q._id.toString() === ans.questionId);
+
+            // ID Healing Fallback: Match by Index if ID doesn't exist anymore
+            if (!question && questionsList[idx]) {
+                question = questionsList[idx];
+                ans.questionId = question._id; // Update to correct current ID
+            }
+
             if (!question) return ans;
 
             const qMarks = question.marks || 0;
