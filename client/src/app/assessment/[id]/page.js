@@ -182,6 +182,14 @@ export default function AssessmentInterface() {
                 if (res.data) {
                     setAssessment(res.data.exam);
                     setQuestions(res.data.questions);
+
+                    // Initialize answers state with all question IDs
+                    const initialAnswers = {};
+                    res.data.questions.forEach(q => {
+                        initialAnswers[q._id] = "";
+                    });
+                    setAnswers(initialAnswers);
+
                     setTimeLeft(res.data.exam.duration * 60);
                     setLoading(false);
                 }
@@ -207,7 +215,7 @@ export default function AssessmentInterface() {
         if (hasStarted && timeLeft === 0 && !submitted && !submitting) {
             handleSubmit(true, switchCount, false, true);
         }
-    }, [timeLeft, hasStarted, submitted, submitting]);
+    }, [timeLeft, hasStarted, submitted, submitting, answers]);
 
     // Check attempts in real-time
     useEffect(() => {
