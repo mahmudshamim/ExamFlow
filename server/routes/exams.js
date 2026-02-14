@@ -81,7 +81,36 @@ router.put('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Exam not found' });
         }
 
-        // Update exam metadata
+        // 1. Update/Create/Delete Questions
+        const existingQuestionIds = questions.filter(q => q._id).map(q => q._id.toString());
+
+        // Delete questions that are no longer in the payload
+        await Question.deleteMany({
+            examId: id,
+            _id: { $nin: existingQuestionIds }
+        });
+
+        const updatedQuestionIds = [];
+        for (const q of questions) {
+            if (q._id) {
+                // Update existing question
+                await Question.findByIdAndUpdate(q._id, {
+                    ...q,
+                    examId: id
+                });
+                updatedQuestionIds.push(q._id);
+            } else {
+                // Create new question
+                const newQ = new Question({
+                    ...q,
+                    examId: id
+                });
+                await newQ.save();
+                updatedQuestionIds.push(newQ._id);
+            }
+        }
+
+        // Update exam's questions array and metadata
         exam.title = title;
         exam.description = description;
         exam.coverImage = coverImage;
@@ -89,23 +118,10 @@ router.put('/:id', async (req, res) => {
         exam.endTime = endTime;
         exam.duration = duration;
         exam.settings = settings;
-
-        // Delete all existing questions for this exam
-        await Question.deleteMany({ examId: id });
-
-        // Create new questions
-        const questionDocs = await Question.insertMany(
-            questions.map(q => ({
-                ...q,
-                examId: exam._id
-            }))
-        );
-
-        // Update exam's questions array
-        exam.questions = questionDocs.map(q => q._id);
+        exam.questions = updatedQuestionIds;
         await exam.save();
 
-        res.json({ exam, questions: questionDocs });
+        res.json({ exam, questions: await Question.find({ examId: id }) });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

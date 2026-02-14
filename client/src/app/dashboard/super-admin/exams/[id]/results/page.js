@@ -77,7 +77,7 @@ export default function ExamResultsPage() {
                     <p class="text-sm font-bold text-slate-800 mb-3">${q.text}</p>
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
                         <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Candidate's Answer:</p>
-                        <p class="text-sm text-slate-700 font-medium">${candidateAnswer?.answer || '<span class="italic opacity-50">No Answer</span>'}</p>
+                        <p class="text-sm text-slate-700 font-medium">${candidateAnswer?.answer || '<span class="italic opacity-50">No Answer Found (Question might have been significantly changed or deleted)</span>'}</p>
                     </div>
                     
                     ${(!isGraded || q.type !== 'MCQ') ? `

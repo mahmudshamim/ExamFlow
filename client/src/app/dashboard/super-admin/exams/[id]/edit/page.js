@@ -79,6 +79,7 @@ export default function EditExamPage() {
                 // Set questions with temporary IDs for UI manipulation
                 setQuestions(fetchedQuestions.map((q, idx) => ({
                     id: Date.now() + idx,
+                    _id: q._id, // Preserve database ID
                     type: q.type,
                     text: q.text,
                     options: q.options || [],
@@ -289,7 +290,7 @@ export default function EditExamPage() {
         try {
             const token = localStorage.getItem('token');
 
-            // Clean up questions before sending (remove temp IDs)
+            // Clean up questions before sending (remove temp UI 'id', but keep database '_id')
             const cleanQuestions = questions.map(({ id, ...rest }) => rest);
 
             const payload = {
