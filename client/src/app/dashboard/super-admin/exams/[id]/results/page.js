@@ -342,7 +342,10 @@ export default function ExamResultsPage() {
         if (!submissions.length || !questions.length) return;
 
         // 1. Prepare Headers
-        const questionHeaders = questions.map(q => `"${q.text.replace(/"/g, '""')} (Max ${q.marks})"`).join(',');
+        const questionHeaders = questions.map(q => {
+            const cleanText = q.text.replace(/"/g, '""');
+            return `"${cleanText} (Marks)","${cleanText} (Answer)"`;
+        }).join(',');
         const headers = `Rank,Candidate Name,Candidate Email,Total Score,Status,Submitted At,${questionHeaders}`;
 
         // 2. Prepare Rows
@@ -355,7 +358,7 @@ export default function ExamResultsPage() {
             }
             const date = sub.submittedAt ? new Date(sub.submittedAt).toLocaleString().replace(/,/g, '') : 'N/A';
 
-            const questionMarks = questions.map((q, idx) => {
+            const questionData = questions.map((q, idx) => {
                 // Priority 1: Match by ID (Modern/Fixed data)
                 let ans = sub.answers.find(a => a.questionId.toString() === q._id.toString());
 
@@ -364,11 +367,12 @@ export default function ExamResultsPage() {
                     ans = sub.answers[idx];
                 }
 
-                if (ans && !ans.isGraded) return 'Pending';
-                return ans?.marksObtained ?? 0;
+                const marks = (ans && !ans.isGraded) ? 'Pending' : (ans?.marksObtained ?? 0);
+                const answer = ans?.answer ? `"${ans.answer.toString().replace(/"/g, '""')}"` : '""';
+                return `${marks},${answer}`;
             }).join(',');
 
-            return `${index + 1},"${sub.candidateName}","${sub.candidateEmail}",${sub.status === 'PENDING' ? 'Pending' : sub.totalScore},${status},"${date}",${questionMarks}`;
+            return `${index + 1},"${sub.candidateName}","${sub.candidateEmail}",${sub.status === 'PENDING' ? 'Pending' : sub.totalScore},${status},"${date}",${questionData}`;
         });
 
         // 3. Combine and download
